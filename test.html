@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Flashcard App</title>
+    <!-- Viewport meta tag for mobile devices -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* CSS Styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+        nav {
+            background-color: #333;
+            padding: 10px;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        nav button {
+            margin-right: 10px;
+            margin-bottom: 10px;
+            padding: 10px 15px;
+            background-color: #555;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            flex: 1 1 calc(25% - 20px);
+        }
+        nav button:hover {
+            background-color: #777;
+        }
+        #content {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h2 {
+            color: #333;
+        }
+        #flashcard-list, #status-gallery {
+            margin-top: 20px;
+        }
+        .flashcard-item {
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .flashcard-item input[type="text"], .flashcard-item textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border-radius: 3px;
+            border: 1px solid #ccc;
+        }
+        #flashcard-answer {
+            margin-top: 20px;
+        }
+        .hidden {
+            display: none;
+        }
+        #review-buttons button, #edit-buttons button {
+            margin-right: 10px;
+            margin-bottom: 10px;
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        #review-buttons button:nth-child(2) {
+            background-color: #dc3545;
+        }
+        #review-buttons button:nth-child(3) {
+            background-color: #ffc107;
+            color: #000;
+        }
+        #review-buttons button:hover, #edit-buttons button:hover {
+            opacity: 0.8;
+        }
+        textarea {
+            resize: vertical;
+        }
+        #flashcard-prompt h3 {
+            font-size: 24px;
+            color: #007bff;
+            word-wrap: break-word;
+        }
+        #flashcard-answer p {
+            font-size: 18px;
+            line-height: 1.6;
+            word-wrap: break-word;
+        }
+        #flashcard-answer ul {
+            list-style-type: disc;
+            margin-left: 20px;
+        }
+        #flashcard-answer strong {
+            color: #333;
+        }
+        audio, img {
+            display: block;
+            margin-top: 15px;
+            max-width: 100%;
+        }
+        button {
+            border-radius: 3px;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        input[type="file"] {
+            margin-bottom: 10px;
+        }
+        /* Style for the Clear Cache button */
+        #import-export button {
+            margin-top: 10px;
+            background-color: #dc3545;
+        }
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            nav button {
+                flex: 1 1 100%;
+            }
+            #flashcard-prompt h3 {
+                font-size: 20px;
+            }
+            #flashcard-answer p {
+                font-size: 16px;
+            }
+            #review-buttons button, #edit-buttons button {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+        }
+        /* Status page adjustments */
+        .status-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .status-item {
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            flex: 1 1 calc(50% - 10px);
+            margin-right: 10px;
+        }
+        .status-item:last-child {
+            margin-right: 0;
+        }
+        @media (max-width: 600px) {
+            .status-item {
+                flex: 1 1 100%;
+                margin-right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <button onclick="showPage('review-page')">Review Page</button>
+        <button onclick="showPage('input-page')">Input Page</button>
+        <button onclick="showPage('status-page')">Status Page</button>
+        <button onclick="showPage('import-export')">Import/Export</button>
+    </nav>
+    <div id="content">
+        <!-- Review Page -->
+        <div id="review-page">
+            <h2>Review Flashcards</h2>
+            <p>Flashcards to review today: <span id="flashcards-to-review">0</span></p>
+            <div id="flashcard-prompt">
+                <!-- Flashcard prompt -->
+            </div>
+            <div id="review-buttons">
+                <button onclick="reviewChoice('remember')">Remember</button>
+                <button onclick="reviewChoice('forget')">Forget</button>
+                <button onclick="reviewChoice('not_sure')">Not Sure</button>
+            </div>
+            <div id="flashcard-answer" class="hidden">
+                <!-- Answer and media -->
+            </div>
+        </div>
+
+        <!-- Input Page -->
+        <div id="input-page" style="display: none;">
+            <h2>Input Flashcards</h2>
+            <textarea id="flashcard-input" rows="10" cols="80" placeholder="Enter flashcards here..."></textarea>
+            <br><br>
+            <label for="audio-files">Upload Audio Files:</label>
+            <input type="file" id="audio-files" multiple accept="audio/*">
+            <label for="image-files">Upload Image Files:</label>
+            <input type="file" id="image-files" multiple accept="image/*">
+            <br><br>
+            <button onclick="processFlashcards()">Submit Flashcards</button>
+            <h3>Flashcards List</h3>
+            <div id="flashcard-list">
+                <!-- Flashcards for editing -->
+            </div>
+        </div>
+
+        <!-- Status Page -->
+        <div id="status-page" style="display: none;">
+            <h2>Status</h2>
+            <div id="status-gallery">
+                <!-- Status gallery -->
+            </div>
+        </div>
+
+        <!-- Import/Export -->
+        <div id="import-export" style="display: none;">
+            <h2>Import/Export Data</h2>
+            <button onclick="exportData()">Export Data</button>
+            <br><br>
+            <input type="file" id="import-file">
+            <button onclick="importData()">Import Data</button>
+            <br><br>
+            <button onclick="clearCache()">Clear Cache</button>
+        </div>
+    </div>
+    <script>
+        // Data Structures
+        let flashcards = [];
+        let currentReviewIndex = -1;
+        let audioFiles = {};
+        let imageFiles = {};
+        const groups = ['A', 'B']; // You can add more groups as needed
+
+        // Navigation Function
+        function showPage(pageId) {
+            document.getElementById('input-page').style.display = 'none';
+            document.getElementById('review-page').style.display = 'none';
+            document.getElementById('status-page').style.display = 'none';
+            document.getElementById('import-export').style.display = 'none';
+            document.getElementById(pageId).style.display = 'block';
+
+            if (pageId === 'review-page') {
+                prepareReview();
+            } else if (pageId === 'status-page') {
+                updateStatus();
+            } else if (pageId === 'input-page') {
+                updateFlashcardList();
+            }
+        }
+
+        // Process Flashcards Input
+        function processFlashcards() {
+            const inputText = document.getElementById('flashcard-input').value;
+            const cards = parseFlashcards(inputText);
+
+            cards.forEach(card => {
+                if (!flashcards.some(fc => fc.prompt === card.prompt)) {
+                    flashcards.push(card);
+                }
+            });
+
+            document.getElementById('flashcard-input').value = '';
+            localStorage.setItem('flashcards', JSON.stringify(flashcards));
+            updateFlashcardList();
+        }
+
+        // Parse Flashcards from Input Text
+        function parseFlashcards(text) {
+            const lines = text.split('\n');
+            const cards = [];
+            let card = null;
+            let content = [];
+
+            lines.forEach(line => {
+                if (line.startsWith('- **') && line.includes('#card')) {
+                    if (card) {
+                        card.answer = content.join('\n').trim();
+                        cards.push(card);
+                    }
+                    card = {
+                        prompt: line.match(/- \*\*(.+)\*\* #card/)[1],
+                        answer: '',
+                        audio: '',
+                        image: '',
+                        group: groups[cards.length % groups.length],
+                        reviewDates: [],
+                        nextReviewDate: new Date().toISOString().split('T')[0],
+                        rememberedCount: 0,
+                        inputDate: new Date().toISOString().split('T')[0]
+                    };
+                    content = [];
+                } else if (line.includes('![Audio](')) {
+                    const audioMatch = line.match(/!\[Audio\]\(\.\/assets\/(.+)\)/);
+                    if (audioMatch) {
+                        card.audio = audioMatch[1];
+                    }
+                } else if (line.includes('![Image](')) {
+                    const imageMatch = line.match(/!\[Image\]\(\.\/assets\/(.+)\)/);
+                    if (imageMatch) {
+                        card.image = imageMatch[1];
+                    }
+                } else {
+                    content.push(line);
+                }
+            });
+
+            if (card) {
+                card.answer = content.join('\n').trim();
+                cards.push(card);
+            }
+
+            return cards;
+        }
+
+        // Update Flashcard List
+        function updateFlashcardList() {
+            const listDiv = document.getElementById('flashcard-list');
+            listDiv.innerHTML = '';
+            flashcards.forEach((card, index) => {
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'flashcard-item';
+                cardDiv.innerHTML = `
+                    <p><strong>Prompt:</strong></p>
+                    <input type="text" value="${card.prompt}" onchange="editFlashcard(${index}, 'prompt', this.value)">
+                    <p><strong>Answer:</strong></p>
+                    <textarea rows="5" onchange="editFlashcard(${index}, 'answer', this.value)">${card.answer}</textarea>
+                    <p><strong>Audio:</strong> ${card.audio}</p>
+                    <p><strong>Image:</strong> ${card.image}</p>
+                    <p><strong>Group:</strong> ${card.group}</p>
+                    <label>Upload Audio:</label>
+                    <input type="file" accept="audio/*" onchange="uploadAudio(${index}, this.files[0])">
+                    <label>Upload Image:</label>
+                    <input type="file" accept="image/*" onchange="uploadImage(${index}, this.files[0])">
+                    <button onclick="removeFlashcard(${index})">Remove</button>
+                `;
+                listDiv.appendChild(cardDiv);
+            });
+        }
+
+        // Edit Flashcard
+        function editFlashcard(index, field, value) {
+            flashcards[index][field] = value;
+            localStorage.setItem('flashcards', JSON.stringify(flashcards));
+        }
+
+        // Remove Flashcard
+        function removeFlashcard(index) {
+            flashcards.splice(index, 1);
+            localStorage.setItem('flashcards', JSON.stringify(flashcards));
+            updateFlashcardList();
+        }
+
+        // Load Flashcards on Page Load
+        window.onload = function() {
+            const storedFlashcards = localStorage.getItem('flashcards');
+            if (storedFlashcards) {
+                flashcards = JSON.parse(storedFlashcards);
+            }
+            showPage('review-page');
+        };
+
+        // Handle Audio Files Upload
+        document.getElementById('audio-files').addEventListener('change', function(event) {
+            const files = event.target.files;
+            for (let file of files) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    audioFiles[file.name] = e.target.result;
+                    localStorage.setItem('audio_' + file.name, e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Handle Image Files Upload
+        document.getElementById('image-files').addEventListener('change', function(event) {
+            const files = event.target.files;
+            for (let file of files) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imageFiles[file.name] = e.target.result;
+                    localStorage.setItem('image_' + file.name, e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Upload Audio for Individual Flashcard
+        function uploadAudio(index, file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const fileName = file.name;
+                audioFiles[fileName] = e.target.result;
+                localStorage.setItem('audio_' + fileName, e.target.result);
+                flashcards[index].audio = fileName;
+                localStorage.setItem('flashcards', JSON.stringify(flashcards));
+                updateFlashcardList();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Upload Image for Individual Flashcard
+        function uploadImage(index, file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const fileName = file.name;
+                imageFiles[fileName] = e.target.result;
+                localStorage.setItem('image_' + fileName, e.target.result);
+                flashcards[index].image = fileName;
+                localStorage.setItem('flashcards', JSON.stringify(flashcards));
+                updateFlashcardList();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Prepare for Review
+        function prepareReview() {
+            const today = new Date().toISOString().split('T')[0];
+            const dueFlashcards = flashcards.filter(card => card.nextReviewDate && card.nextReviewDate <= today);
+            document.getElementById('flashcards-to-review').innerText = dueFlashcards.length;
+
+            if (dueFlashcards.length > 0) {
+                currentReviewIndex = flashcards.indexOf(dueFlashcards[0]);
+                showFlashcardPrompt();
+            } else {
+                document.getElementById('flashcard-prompt').innerHTML = '<p>No flashcards to review today.</p>';
+                document.getElementById('review-buttons').style.display = 'none';
+                document.getElementById('flashcard-answer').classList.add('hidden');
+            }
+        }
+
+        // Show Flashcard Prompt
+        function showFlashcardPrompt() {
+            const card = flashcards[currentReviewIndex];
+            document.getElementById('flashcard-prompt').innerHTML = `<h3>${card.prompt}</h3>`;
+            document.getElementById('flashcard-answer').classList.add('hidden');
+            document.getElementById('review-buttons').style.display = 'block';
+        }
+
+        // Handle Review Choice
+        function reviewChoice(choice) {
+            const card = flashcards[currentReviewIndex];
+            if (choice === 'remember') {
+                card.rememberedCount += 1;
+                if (card.group === 'A') {
+                    const intervals = [1, 3, 7, 14, 30, 60];
+                    const idx = Math.min(card.rememberedCount - 1, intervals.length - 1);
+                    const nextInterval = intervals[idx];
+                    card.nextReviewDate = addDays(new Date(), nextInterval);
+                    if (card.rememberedCount >= 6) {
+                        card.nextReviewDate = null; // No longer needs review
+                    }
+                } else if (card.group === 'B') {
+                    if (card.rememberedCount >= 2) {
+                        card.nextReviewDate = null; // No longer needs review
+                    } else {
+                        card.nextReviewDate = addDays(new Date(), 7);
+                    }
+                }
+            } else {
+                card.rememberedCount = 0;
+                card.nextReviewDate = addDays(new Date(), 1); // Review again tomorrow
+            }
+            card.reviewDates.push(new Date().toISOString().split('T')[0]);
+            localStorage.setItem('flashcards', JSON.stringify(flashcards));
+            showFlashcardAnswer();
+        }
+
+        // Format the Answer for Display
+        function formatAnswer(answer) {
+            let formattedAnswer = '';
+            const lines = answer.split('\n');
+            let examples = '';
+            lines.forEach(line => {
+                if (line.startsWith('- **E')) {
+                    examples += `<li>${line.substring(2)}</li>`;
+                } else if (line.startsWith('- **Synonyms**:')) {
+                    formattedAnswer += `<p><strong>Synonyms:</strong> ${line.substring(15)}</p>`;
+                } else if (line.startsWith('- **Mnemonic**:')) {
+                    formattedAnswer += `<p><strong>Mnemonic:</strong> ${line.substring(15)}</p>`;
+                } else if (line.startsWith('- ')) {
+                    formattedAnswer += `<p>${line.substring(2)}</p>`;
+                } else {
+                    formattedAnswer += `<p>${line}</p>`;
+                }
+            });
+            if (examples) {
+                formattedAnswer += `<p><strong>Examples:</strong></p><ul>${examples}</ul>`;
+            }
+            return formattedAnswer;
+        }
+
+        // Show Flashcard Answer
+        function showFlashcardAnswer() {
+            const card = flashcards[currentReviewIndex];
+            let audioHTML = '';
+            if (card.audio) {
+                const audioData = localStorage.getItem('audio_' + card.audio);
+                if (audioData) {
+                    audioHTML = `<audio controls src="${audioData}"></audio>`;
+                }
+            }
+            let imageHTML = '';
+            if (card.image) {
+                const imageData = localStorage.getItem('image_' + card.image);
+                if (imageData) {
+                    imageHTML = `<img src="${imageData}" alt="Image">`;
+                }
+            }
+            const formattedAnswer = formatAnswer(card.answer);
+            document.getElementById('flashcard-answer').innerHTML = `
+                ${formattedAnswer}
+                ${audioHTML}
+                ${imageHTML}
+                <br>
+                <button onclick="editCurrentFlashcard()">Edit</button>
+                <button onclick="nextFlashcard()">Next Flashcard</button>
+            `;
+            document.getElementById('flashcard-answer').classList.remove('hidden');
+            document.getElementById('review-buttons').style.display = 'none';
+        }
+
+        // Edit Current Flashcard in Review Page
+        function editCurrentFlashcard() {
+            const card = flashcards[currentReviewIndex];
+            document.getElementById('flashcard-answer').innerHTML = `
+                <p><strong>Prompt:</strong></p>
+                <input type="text" value="${card.prompt}" onchange="editFlashcard(${currentReviewIndex}, 'prompt', this.value)">
+                <p><strong>Answer:</strong></p>
+                <textarea rows="5" onchange="editFlashcard(${currentReviewIndex}, 'answer', this.value)">${card.answer}</textarea>
+                <p><strong>Audio:</strong> ${card.audio}</p>
+                <label>Upload Audio:</label>
+                <input type="file" accept="audio/*" onchange="uploadAudio(${currentReviewIndex}, this.files[0])">
+                <p><strong>Image:</strong> ${card.image}</p>
+                <label>Upload Image:</label>
+                <input type="file" accept="image/*" onchange="uploadImage(${currentReviewIndex}, this.files[0])">
+                <button onclick="saveEdit()">Save</button>
+                <button onclick="cancelEdit()">Cancel</button>
+            `;
+        }
+
+        function saveEdit() {
+            localStorage.setItem('flashcards', JSON.stringify(flashcards));
+            showFlashcardAnswer();
+        }
+
+        function cancelEdit() {
+            showFlashcardAnswer();
+        }
+
+        // Move to Next Flashcard
+        function nextFlashcard() {
+            prepareReview();
+        }
+
+        // Add Days to Date
+        function addDays(date, days) {
+            const result = new Date(date);
+            result.setDate(result.getDate() + days);
+            return result.toISOString().split('T')[0];
+        }
+
+        // Update Status
+        function updateStatus() {
+            const statusDiv = document.getElementById('status-gallery');
+            statusDiv.innerHTML = '';
+
+            // Calculate summary
+            const summary = {};
+            groups.forEach(group => {
+                summary[group] = { input: 0, waitForReview: 0, solidRemember: 0 };
+            });
+
+            flashcards.forEach(card => {
+                summary[card.group].input += 1;
+                if (card.nextReviewDate === null) {
+                    summary[card.group].solidRemember += 1;
+                } else {
+                    summary[card.group].waitForReview += 1;
+                }
+            });
+
+            // Display summary
+            let summaryHTML = '<h3>Summary</h3><div class="status-row">';
+            for (let group of groups) {
+                summaryHTML += `
+                    <div class="status-item">
+                        <p><strong>Group ${group}</strong></p>
+                        <p>Input: ${summary[group].input}</p>
+                        <p>Wait for review: ${summary[group].waitForReview}</p>
+                        <p>Solid remember: ${summary[group].solidRemember}</p>
+                    </div>
+                `;
+            }
+            summaryHTML += '</div>';
+            statusDiv.innerHTML += summaryHTML;
+
+            // Group by date
+            const dates = {};
+            flashcards.forEach(card => {
+                const date = card.inputDate;
+                if (!dates[date]) {
+                    dates[date] = {};
+                    groups.forEach(group => {
+                        dates[date][group] = { input: 0, waitForReview: 0, solidRemember: 0 };
+                    });
+                }
+                dates[date][card.group].input += 1;
+                if (card.nextReviewDate === null) {
+                    dates[date][card.group].solidRemember += 1;
+                } else {
+                    dates[date][card.group].waitForReview += 1;
+                }
+            });
+
+            // Display date-wise stats
+            const sortedDates = Object.keys(dates).sort().reverse();
+            sortedDates.forEach(date => {
+                let dateHTML = `<h3>${date}</h3><div class="status-row">`;
+                for (let group of groups) {
+                    const data = dates[date][group];
+                    dateHTML += `
+                        <div class="status-item">
+                            <p><strong>Group ${group}</strong></p>
+                            <p>Input: ${data.input}</p>
+                            <p>Wait for review: ${data.waitForReview}</p>
+                            <p>Solid remember: ${data.solidRemember}</p>
+                        </div>
+                    `;
+                }
+                dateHTML += '</div>';
+                statusDiv.innerHTML += dateHTML;
+            });
+        }
+
+        // Export Data
+        function exportData() {
+            const dataStr = JSON.stringify(flashcards);
+            const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+            const exportFileDefaultName = 'flashcards_data.json';
+
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+
+        // Import Data
+        function importData() {
+            const fileInput = document.getElementById('import-file');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('Please select a file to import.');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                flashcards = JSON.parse(e.target.result);
+                localStorage.setItem('flashcards', JSON.stringify(flashcards));
+                updateFlashcardList();
+                alert('Data imported successfully.');
+            };
+            reader.readAsText(file);
+        }
+
+        // Clear Cache
+        function clearCache() {
+            if (confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
+                localStorage.clear();
+                flashcards = [];
+                audioFiles = {};
+                imageFiles = {};
+                updateFlashcardList();
+                alert('All data has been cleared.');
+                showPage('input-page');
+            }
+        }
+    </script>
+</body>
+</html>
