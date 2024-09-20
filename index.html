@@ -198,7 +198,7 @@
             }
 
             #flashcard-prompt h3 {
-                font-size: 1.125rem;
+                font-size: 4.125rem;
             }
 
             #flashcard-answer p {
@@ -209,6 +209,42 @@
                 padding: 0.5rem 0.75rem;
                 font-size: 0.875rem;
             }
+        }
+        .card-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .flashcard-content {
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        #flashcard-prompt {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        #flashcard-answer {
+            text-align: left;
+        }
+
+        .card-footer {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .card-footer button {
+            margin: 5px;
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/microsoft-cognitiveservices-speech-sdk/distrib/browser/microsoft.cognitiveservices.speech.sdk.bundle.js"></script>
@@ -288,27 +324,30 @@
         </div>
         <div id="review-page">
             <p>Flashcards to review today: <span id="flashcards-to-review">0</span></p>
-            <div id="flashcard-prompt">
-                <!-- Flashcard prompt -->
-            </div>
-                <!-- Show Answers Button -->
-            <button id="show-answers-button" onclick="showAnswers()">Show Answers</button>
-            
-            <!-- Display Prompt Audio Button -->
-            <button id="play-prompt-button" onclick="playPromptAudio()">Display</button> 
-            
-            <!-- Review Buttons (Initially Hidden) -->
-            <div id="review-buttons" class="hidden">
-                <button onclick="reviewChoice('remember')">Remember</button>
-                <button onclick="reviewChoice('forget')">Forget</button>
-                <button onclick="reviewChoice('not_sure')">Not Sure</button>
-            </div>
-            
-            <div id="flashcard-answer" class="hidden">
-                <!-- Answer and media -->
+            <div class="card-container">
+                <div class="flashcard-content">
+                    <div id="flashcard-prompt">
+                        <!-- Flashcard prompt -->
+                    </div>
+                        <!-- Show Answers Button -->
+                    <button id="show-answers-button" onclick="showAnswers()">Show Answers</button>
+                    
+                    <!-- Display Prompt Audio Button -->
+                    <button id="play-prompt-button" onclick="playPromptAudio()">Display</button> 
+                    
+                    <!-- Review Buttons (Initially Hidden) -->
+                    <div id="review-buttons" class="hidden">
+                        <button onclick="reviewChoice('remember')">Remember</button>
+                        <button onclick="reviewChoice('forget')">Forget</button>
+                        <button onclick="reviewChoice('not_sure')">Not Sure</button>
+                    </div>
+                    
+                    <div id="flashcard-answer" class="hidden">
+                        <!-- Answer and media -->
+                    </div>
+                </div>
             </div>
         </div>
-
         <!-- Input Page -->
         <div id="input-page" style="display: none;">
             <h2>Input Flashcards</h2>
@@ -498,9 +537,7 @@
             updateFlashcardList();
         }
 
-        // Show Answers Function
-        // Show Answers Function
-        // Show Answers Function with Azure TTS
+
         // Show Answers Function with Server-Side TTS
         function showAnswers() {
             const card = flashcards[currentReviewIndex];
@@ -637,13 +674,7 @@
                     <input type="text" value="${card.prompt}" onchange="editFlashcard(${index}, 'prompt', this.value)">
                     <p><strong>Answer:</strong></p>
                     <textarea rows="5" onchange="editFlashcard(${index}, 'answer', this.value)">${card.answer}</textarea>
-                    <p><strong>Audio:</strong> ${card.audio}</p>
-                    <p><strong>Image:</strong> ${card.image}</p>
                     <p><strong>Group:</strong> ${card.group}</p>
-                    <label>Upload Audio:</label>
-                    <input type="file" accept="audio/*" onchange="uploadAudio(${index}, this.files[0])">
-                    <label>Upload Image:</label>
-                    <input type="file" accept="image/*" onchange="uploadImage(${index}, this.files[0])">
                     <button onclick="removeFlashcard(${index})">Remove</button>
                 `;
                 listDiv.appendChild(cardDiv);
@@ -672,59 +703,6 @@
             showPage('review-page');
         };
 
-        // Handle Audio Files Upload
-        document.getElementById('audio-files').addEventListener('change', function(event) {
-            const files = event.target.files;
-            for (let file of files) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    audioFiles[file.name] = e.target.result;
-                    localStorage.setItem('audio_' + file.name, e.target.result);
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // Handle Image Files Upload
-        document.getElementById('image-files').addEventListener('change', function(event) {
-            const files = event.target.files;
-            for (let file of files) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    imageFiles[file.name] = e.target.result;
-                    localStorage.setItem('image_' + file.name, e.target.result);
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // Upload Audio for Individual Flashcard
-        function uploadAudio(index, file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const fileName = file.name;
-                audioFiles[fileName] = e.target.result;
-                localStorage.setItem('audio_' + fileName, e.target.result);
-                flashcards[index].audio = fileName;
-                localStorage.setItem('flashcards', JSON.stringify(flashcards));
-                updateFlashcardList();
-            };
-            reader.readAsDataURL(file);
-        }
-
-        // Upload Image for Individual Flashcard
-        function uploadImage(index, file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const fileName = file.name;
-                imageFiles[fileName] = e.target.result;
-                localStorage.setItem('image_' + fileName, e.target.result);
-                flashcards[index].image = fileName;
-                localStorage.setItem('flashcards', JSON.stringify(flashcards));
-                updateFlashcardList();
-            };
-            reader.readAsDataURL(file);
-        }
 
         // Prepare for Review
         function prepareReview() {
