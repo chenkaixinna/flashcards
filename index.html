@@ -178,7 +178,7 @@
             background-color: var(--light-blue);
             color: var(--white);
             margin-bottom: 2rem;
-            font-size: 0.75rem;
+
         }
 
         @media (max-width: 640px) {
@@ -199,7 +199,7 @@
             }
 
             #flashcard-prompt h3 {
-                font-size: 2.125rem;
+                font-size: 4.125rem;
             }
 
             #flashcard-answer p {
@@ -214,13 +214,13 @@
         .card-container {
             background-color: white;
             border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0.1, 0.3);
             padding: 20px;
             margin-top: 20px;
         }
 
         .flashcard-content {
-            min-height: 200px;
+            min-height: 500px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -237,15 +237,43 @@
             text-align: left;
         }
 
-        .card-footer {
-            margin-top: 20px;
+        /* Ensure Flashcard Content is Well-Structured */
+        .flashcard-content {
+            padding: 15px;
             display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Style Labels and Content */
+        .flashcard-content strong {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 1rem;
+            color: var(--light-blue);
+        }
+
+        /* Optional: Adjust Card Footer Button Styles */
+        .card-footer {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
         }
 
         .card-footer button {
-            margin: 5px;
+            padding: 0.5rem 1rem;
+            background-color: var(--salmon);
+            color: var(--white);
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .card-footer button:hover {
+            background-color: var(--pale-yellow);
+            color: var(--black);
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/microsoft-cognitiveservices-speech-sdk/distrib/browser/microsoft.cognitiveservices.speech.sdk.bundle.js"></script>
@@ -309,6 +337,13 @@
     </script>
 </head>
 <body>
+    <nav>
+        <button onclick="showPage('review-page')">Review</button>
+        <button onclick="showPage('input-page')">Input</button>
+        <button onclick="showPage('status-page')">Status</button>
+        <button onclick="showPage('import-export')">Import/Export</button>
+        <button id="settings-button" onclick="showPage('settings-page')">Settings</button> <!-- Added ID -->
+    </nav>
     <div id="content">
         <!-- Settings Page -->
         <div id="settings-page" style="display: none;">
@@ -350,19 +385,19 @@
             </div>
         </div>
         <!-- Input Page -->
+        <!-- Input Page -->
         <div id="input-page" style="display: none;">
             <h2>Input Flashcards</h2>
+            
+            <!-- Search Bar -->
+            <input type="text" id="search-bar" placeholder="Search prompts..." oninput="updateFlashcardList()" style="width: 100%; padding: 0.5rem; margin-bottom: 1rem; border: 1px solid var(--light-blue); border-radius: 0.25rem;">
+            
             <textarea id="flashcard-input" rows="10" cols="80" placeholder="Enter flashcards here..."></textarea>
-            <br><br>
-            <label for="audio-files">Upload Audio Files:</label>
-            <input type="file" id="audio-files" multiple accept="audio/*">
-            <label for="image-files">Upload Image Files:</label>
-            <input type="file" id="image-files" multiple accept="image/*">
             <br><br>
             <button onclick="processFlashcards()">Submit Flashcards</button>
             <h3>Flashcards List</h3>
             <div id="flashcard-list">
-                <!-- Flashcards for editing -->
+                <!-- Flashcards for editing will be dynamically inserted here -->
             </div>
         </div>
 
@@ -387,13 +422,6 @@
             <br><br>
             <button onclick="showPage('settings-page')">Change Settings</button> <!-- New Change Settings Button -->
         </div>
-    <nav>
-        <button onclick="showPage('review-page')">Review</button>
-        <button onclick="showPage('input-page')">Input</button>
-        <button onclick="showPage('status-page')">Status</button>
-        <button onclick="showPage('import-export')">Import/Export</button>
-        <button id="settings-button" onclick="showPage('settings-page')">Settings</button> <!-- Added ID -->
-    </nav>
     </div>
     <script>
         // Data Structures
@@ -663,23 +691,111 @@
         // Parse Flashcards from Input Text
 
 
-        // Update Flashcard List
+       // Update Flashcard List with Search Functionality and Styled Cards
+        // Update Flashcard List with Formatted Answers on Input Page
         function updateFlashcardList() {
             const listDiv = document.getElementById('flashcard-list');
             listDiv.innerHTML = '';
-            flashcards.forEach((card, index) => {
+            
+            const searchQuery = document.getElementById('search-bar').value.toLowerCase();
+
+            // Filter flashcards based on search query
+            const filteredFlashcards = flashcards.filter(card => card.prompt.toLowerCase().includes(searchQuery));
+
+            filteredFlashcards.forEach((card, index) => {
                 const cardDiv = document.createElement('div');
-                cardDiv.className = 'flashcard-item';
+                cardDiv.className = 'card-container';
+                cardDiv.id = `flashcard-${index}`;
+                
+                // Format the answer using the existing formatAnswer function
+                const formattedAnswer = formatAnswer(card.answer);
+
+                // Retrieve and format audio and image if available
+                let audioHTML = '';
+                if (card.audio) {
+                    const audioData = localStorage.getItem('audio_' + card.audio);
+                    if (audioData) {
+                        audioHTML = `<audio controls src="${audioData}"></audio>`;
+                    }
+                }
+
+                let imageHTML = '';
+                if (card.image) {
+                    const imageData = localStorage.getItem('image_' + card.image);
+                    if (imageData) {
+                        imageHTML = `<img src="${imageData}" alt="Image">`;
+                    }
+                }
+
+                // Display Mode with Formatted Answer and Media
                 cardDiv.innerHTML = `
-                    <p><strong>Prompt:</strong></p>
-                    <input type="text" value="${card.prompt}" onchange="editFlashcard(${index}, 'prompt', this.value)">
-                    <p><strong>Answer:</strong></p>
-                    <textarea rows="5" onchange="editFlashcard(${index}, 'answer', this.value)">${card.answer}</textarea>
-                    <p><strong>Group:</strong> ${card.group}</p>
-                    <button onclick="removeFlashcard(${index})">Remove</button>
+                    <div class="flashcard-content">
+                        <div id="flashcard-prompt-${index}">
+                            <strong>Prompt:</strong> ${card.prompt}
+                        </div>
+                        <div id="flashcard-answer-${index}">
+                            <strong>Answer:</strong>
+                            ${formattedAnswer}
+                            ${audioHTML}
+                            ${imageHTML}
+                        </div>
+                        <div class="card-footer">
+                            <button onclick="enableEdit(${index})">Edit</button>
+                            <button onclick="removeFlashcard(${index})">Remove</button>
+                        </div>
+                    </div>
                 `;
                 listDiv.appendChild(cardDiv);
             });
+        }
+
+        // Enable Edit Mode for a Specific Flashcard
+        function enableEdit(index) {
+            const card = flashcards[index];
+            const cardDiv = document.getElementById(`flashcard-${index}`);
+            
+            cardDiv.innerHTML = `
+                <div class="flashcard-content">
+                    <label for="prompt-${index}">Prompt:</label>
+                    <input type="text" id="prompt-${index}" value="${card.prompt}" style="width: 100%; padding: 0.5rem; margin-bottom: 0.5rem; border: 1px solid var(--light-blue); border-radius: 0.25rem;">
+                    
+                    <label for="answer-${index}">Answer:</label>
+                    <textarea id="answer-${index}" rows="4" style="width: 100%; padding: 0.5rem; border: 1px solid var(--light-blue); border-radius: 0.25rem;">${card.answer}</textarea>
+                    
+                    <div class="card-footer">
+                        <button onclick="saveEdit(${index})">Save</button>
+                        <button onclick="cancelEdit(${index})">Cancel</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Save Edited Flashcard
+        function saveEdit(index) {
+            const updatedPrompt = document.getElementById(`prompt-${index}`).value.trim();
+            const updatedAnswer = document.getElementById(`answer-${index}`).value.trim();
+
+            if (!updatedPrompt || !updatedAnswer) {
+                alert('Prompt and Answer cannot be empty.');
+                return;
+            }
+
+            // Update the flashcard data
+            flashcards[index].prompt = updatedPrompt;
+            flashcards[index].answer = updatedAnswer;
+            flashcards[index].inputDate = new Date().toISOString().split('T')[0]; // Update input date if needed
+
+            // Save to localStorage
+            localStorage.setItem('flashcards', JSON.stringify(flashcards));
+
+            // Refresh the flashcard list
+            updateFlashcardList();
+        }
+
+        // Cancel Editing of Flashcard
+        function cancelEdit(index) {
+            // Simply refresh the flashcard list to revert changes
+            updateFlashcardList();
         }
 
         // Edit Flashcard
