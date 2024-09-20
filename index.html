@@ -500,21 +500,8 @@
             updateSettingsButtonVisibility();
         }
 
-        // Initialize on Page Load
-        window.onload = function() {
-            const storedFlashcards = localStorage.getItem('flashcards');
-            if (storedFlashcards) {
-                flashcards = JSON.parse(storedFlashcards);
-            }
 
-            // Load settings
-            loadSettings();
-        };
-        // Navigation Function
-
-        // Navigation Function
         function showPage(pageId) {
-            // List all page IDs
             const pages = ['input-page', 'review-page', 'status-page', 'import-export', 'settings-page'];
             
             // Hide all pages
@@ -526,21 +513,6 @@
             document.getElementById(pageId).style.display = 'block';
 
             // Call relevant functions based on the page
-            if (pageId === 'review-page') {
-                prepareReview();
-            } else if (pageId === 'status-page') {
-                updateStatus();
-            } else if (pageId === 'input-page') {
-                updateFlashcardList();
-            }
-        }
-        function showPage(pageId) {
-            document.getElementById('input-page').style.display = 'none';
-            document.getElementById('review-page').style.display = 'none';
-            document.getElementById('status-page').style.display = 'none';
-            document.getElementById('import-export').style.display = 'none';
-            document.getElementById(pageId).style.display = 'block';
-
             if (pageId === 'review-page') {
                 prepareReview();
             } else if (pageId === 'status-page') {
@@ -817,9 +789,13 @@
             if (storedFlashcards) {
                 flashcards = JSON.parse(storedFlashcards);
             }
+
+            // Load settings
+            loadSettings();
+
+            // Show the review page by default
             showPage('review-page');
         };
-
 
         // Prepare for Review
         function prepareReview() {
