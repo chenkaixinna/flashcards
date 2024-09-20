@@ -163,7 +163,93 @@
                 margin-right: 0;
             }
         }
+        .hidden {
+            display: none;
+        }
+        #show-answers-button {
+            /* Inherits styles from nav buttons or add specific styles */
+            margin-top: 10px;
+            background-color: #007bff; /* Example color */
+        }
+        #play-prompt-button {
+            margin-top: 10px;
+            background-color: #17a2b8; /* Example color for differentiation */
+        }
+        @media (max-width: 768px) {
+            /* Tablet and below */
+            nav button {
+                flex: 1 1 48%;
+            }
+            /* Additional styles */
+        }
+
+        @media (max-width: 480px) {
+            /* Mobile phones */
+            nav button {
+                flex: 1 1 100%;
+            }
+            /* Additional styles */
+        }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/microsoft-cognitiveservices-speech-sdk/distrib/browser/microsoft.cognitiveservices.speech.sdk.bundle.js"></script>
+    <script>
+        // Azure Speech Service Configuration
+
+        const serviceRegion = 'eastasia'; // Replace with your actual region
+        const voiceName = 'en-US-JaneNeural'; // Replace with your desired voice
+        
+        // Verify SpeechSDK is loaded
+        console.log('SpeechSDK:', typeof SpeechSDK !== 'undefined' ? 'Loaded' : 'Not Loaded');
+
+        // Your existing JavaScript functions (e.g., playPromptAudio, showAnswers, etc.)
+        // Ensure they are defined here or in external scripts included after the SDK
+        function parseFlashcards(text) {
+            const lines = text.split('\n');
+            const cards = [];
+            let card = null;
+            let content = [];
+
+            lines.forEach(line => {
+                if (line.startsWith('- **') && line.includes('#card')) {
+                    if (card) {
+                        card.answer = content.join('\n').trim();
+                        cards.push(card);
+                    }
+                    card = {
+                        prompt: line.match(/- \*\*(.+)\*\* #card/)[1],
+                        answer: '',
+                        audio: '',
+                        image: '',
+                        group: groups[cards.length % groups.length],
+                        reviewDates: [],
+                        nextReviewDate: new Date().toISOString().split('T')[0],
+                        rememberedCount: 0,
+                        inputDate: new Date().toISOString().split('T')[0]
+                    };
+                    content = [];
+                } else if (line.includes('![Audio](')) {
+                    const audioMatch = line.match(/!\[Audio\]\(\.\/assets\/(.+)\)/);
+                    if (audioMatch) {
+                        card.audio = audioMatch[1];
+                    }
+                } else if (line.includes('![Image](')) {
+                    const imageMatch = line.match(/!\[Image\]\(\.\/assets\/(.+)\)/);
+                    if (imageMatch) {
+                        card.image = imageMatch[1];
+                    }
+                } else {
+                    content.push(line);
+                }
+            });
+
+            if (card) {
+                card.answer = content.join('\n').trim();
+                cards.push(card);
+            }
+
+            return cards;
+        }
+    </script>
 </head>
 <body>
     <nav>
@@ -171,8 +257,23 @@
         <button onclick="showPage('input-page')">Input Page</button>
         <button onclick="showPage('status-page')">Status Page</button>
         <button onclick="showPage('import-export')">Import/Export</button>
+        <button onclick="showPage('settings-page')">Settings</button> <!-- New Settings Button -->
     </nav>
     <div id="content">
+        <!-- Settings Page -->
+        <div id="settings-page" style="display: none;">
+            <h2>Settings</h2>
+            <label for="subscription-key">Azure Subscription Key:</label>
+            <input type="text" id="subscription-key" placeholder="Enter your Azure subscription key" />
+            
+            <label for="service-region">Service Region:</label>
+            <input type="text" id="service-region" placeholder="Enter your service region (e.g., eastasia)" />
+            
+            <br><br>
+            <button onclick="saveSettings()">Save Settings</button>
+            <button onclick="resetSettings()" style="background-color: #dc3545; margin-left: 10px;">Reset Settings</button> <!-- Reset Button -->
+        </div>
+        <!-- Review Page -->
         <!-- Review Page -->
         <div id="review-page">
             <h2>Review Flashcards</h2>
@@ -180,11 +281,19 @@
             <div id="flashcard-prompt">
                 <!-- Flashcard prompt -->
             </div>
-            <div id="review-buttons">
+                <!-- Show Answers Button -->
+            <button id="show-answers-button" onclick="showAnswers()">Show Answers</button>
+            
+            <!-- Display Prompt Audio Button -->
+            <button id="play-prompt-button" onclick="playPromptAudio()">Display</button> 
+            
+            <!-- Review Buttons (Initially Hidden) -->
+            <div id="review-buttons" class="hidden">
                 <button onclick="reviewChoice('remember')">Remember</button>
                 <button onclick="reviewChoice('forget')">Forget</button>
                 <button onclick="reviewChoice('not_sure')">Not Sure</button>
             </div>
+            
             <div id="flashcard-answer" class="hidden">
                 <!-- Answer and media -->
             </div>
@@ -234,7 +343,83 @@
         let imageFiles = {};
         const groups = ['A', 'B']; // You can add more groups as needed
 
+        // Reset Settings Function
+        function resetSettings() {
+            if (confirm('Are you sure you want to reset your Azure settings?')) {
+                localStorage.removeItem('azureSubscriptionKey');
+                localStorage.removeItem('azureServiceRegion');
+                alert('Azure settings have been reset.');
+                showPage('settings-page');
+            }
+        }
+        // Save Settings Function
+        function saveSettings() {
+            const subscriptionKey = document.getElementById('subscription-key').value.trim();
+            const serviceRegion = document.getElementById('service-region').value.trim();
+
+            if (!subscriptionKey || !serviceRegion) {
+                alert('Please enter both the subscription key and service region.');
+                return;
+            }
+
+            // Save to localStorage
+            localStorage.setItem('azureSubscriptionKey', subscriptionKey);
+            localStorage.setItem('azureServiceRegion', serviceRegion);
+
+            alert('Settings saved successfully.');
+
+            // Optionally, navigate back to the review page after saving
+            showPage('review-page');
+        }
+
+        // Load Settings on Page Load
+        function loadSettings() {
+            const storedKey = localStorage.getItem('azureSubscriptionKey');
+            const storedRegion = localStorage.getItem('azureServiceRegion');
+
+            if (storedKey && storedRegion) {
+                // If settings are already saved, do nothing or provide feedback
+                console.log('Azure settings loaded from localStorage.');
+            } else {
+                // If settings are not saved, navigate to the settings page
+                showPage('settings-page');
+            }
+        }
+
+        // Initialize on Page Load
+        window.onload = function() {
+            const storedFlashcards = localStorage.getItem('flashcards');
+            if (storedFlashcards) {
+                flashcards = JSON.parse(storedFlashcards);
+            }
+
+            // Load settings
+            loadSettings();
+        };
         // Navigation Function
+
+        // Navigation Function
+        function showPage(pageId) {
+            // List all page IDs
+            const pages = ['input-page', 'review-page', 'status-page', 'import-export', 'settings-page'];
+            
+            // Hide all pages
+            pages.forEach(id => {
+                document.getElementById(id).style.display = 'none';
+            });
+
+            // Show the selected page
+            document.getElementById(pageId).style.display = 'block';
+
+            // Call relevant functions based on the page
+            if (pageId === 'review-page') {
+                prepareReview();
+            } else if (pageId === 'status-page') {
+                updateStatus();
+            } else if (pageId === 'input-page') {
+                updateFlashcardList();
+            }
+        }
         function showPage(pageId) {
             document.getElementById('input-page').style.display = 'none';
             document.getElementById('review-page').style.display = 'none';
@@ -267,53 +452,132 @@
             updateFlashcardList();
         }
 
-        // Parse Flashcards from Input Text
-        function parseFlashcards(text) {
-            const lines = text.split('\n');
-            const cards = [];
-            let card = null;
-            let content = [];
-
-            lines.forEach(line => {
-                if (line.startsWith('- **') && line.includes('#card')) {
-                    if (card) {
-                        card.answer = content.join('\n').trim();
-                        cards.push(card);
-                    }
-                    card = {
-                        prompt: line.match(/- \*\*(.+)\*\* #card/)[1],
-                        answer: '',
-                        audio: '',
-                        image: '',
-                        group: groups[cards.length % groups.length],
-                        reviewDates: [],
-                        nextReviewDate: new Date().toISOString().split('T')[0],
-                        rememberedCount: 0,
-                        inputDate: new Date().toISOString().split('T')[0]
-                    };
-                    content = [];
-                } else if (line.includes('![Audio](')) {
-                    const audioMatch = line.match(/!\[Audio\]\(\.\/assets\/(.+)\)/);
-                    if (audioMatch) {
-                        card.audio = audioMatch[1];
-                    }
-                } else if (line.includes('![Image](')) {
-                    const imageMatch = line.match(/!\[Image\]\(\.\/assets\/(.+)\)/);
-                    if (imageMatch) {
-                        card.image = imageMatch[1];
-                    }
-                } else {
-                    content.push(line);
-                }
-            });
-
-            if (card) {
-                card.answer = content.join('\n').trim();
-                cards.push(card);
+        // Show Answers Function
+        // Show Answers Function
+        // Show Answers Function with Azure TTS
+        // Show Answers Function with Server-Side TTS
+        function showAnswers() {
+            const card = flashcards[currentReviewIndex];
+            
+            if (!card) {
+                alert('No flashcard available to show the answer.');
+                return;
             }
 
-            return cards;
+            const formattedAnswer = formatAnswer(card.answer);
+
+            // Retrieve Azure settings from localStorage
+            const subscriptionKey = localStorage.getItem('azureSubscriptionKey');
+            const serviceRegion = localStorage.getItem('azureServiceRegion');
+
+            if (!subscriptionKey || !serviceRegion) {
+                alert('Azure settings are not configured. Please set them in the Settings page.');
+                showPage('settings-page');
+                return;
+            }
+
+            // Initialize Azure Speech Config
+            const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(subscriptionKey, serviceRegion);
+            speechConfig.speechSynthesisVoiceName = voiceName;
+
+            // Create a synthesizer
+            const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, null);
+
+            // Synthesize speech asynchronously
+            synthesizer.speakTextAsync(card.answer,
+                function (result) {
+                    if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+                        console.log('Speech synthesis succeeded.');
+                    } else {
+                        console.error('Speech synthesis failed:', result.errorDetails);
+                    }
+                    synthesizer.close();
+                },
+                function (err) {
+                    console.error('Speech synthesis error:', err);
+                    synthesizer.close();
+                });
+
+            // Populate the flashcard-answer div with the formatted answer
+            document.getElementById('flashcard-answer').innerHTML = `
+                ${formattedAnswer}
+            `;
+
+            // Show the answer and review buttons
+            document.getElementById('flashcard-answer').classList.remove('hidden');
+            document.getElementById('review-buttons').classList.remove('hidden');
+
+            // Hide the "Show Answers" button
+            document.getElementById('show-answers-button').classList.add('hidden');
         }
+
+
+        function playPromptAudio() {
+            const card = flashcards[currentReviewIndex];
+            const playButton = document.getElementById('play-prompt-button');
+
+            if (!card) {
+                alert('No flashcard available to play the prompt.');
+                return;
+            }
+
+            const promptText = card.prompt;
+
+            // Retrieve Azure settings from localStorage
+            const subscriptionKey = localStorage.getItem('azureSubscriptionKey');
+            const serviceRegion = localStorage.getItem('azureServiceRegion');
+
+            if (!subscriptionKey || !serviceRegion) {
+                alert('Azure settings are not configured. Please set them in the Settings page.');
+                showPage('settings-page');
+                return;
+            }
+
+            // Disable the button to prevent multiple clicks
+            playButton.disabled = true;
+            playButton.innerText = 'Playing...';
+
+            try {
+                // Initialize Azure Speech Config
+                const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(subscriptionKey, serviceRegion);
+                speechConfig.speechSynthesisVoiceName = voiceName;
+
+                // Create an audio configuration that outputs to the default speaker
+                const audioConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
+
+                // Create a synthesizer
+                const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, audioConfig);
+
+                // Synthesize speech and play audio
+                synthesizer.speakTextAsync(promptText,
+                    function (result) {
+                        if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+                            console.log('Speech synthesis succeeded.');
+                        } else {
+                            console.error('Speech synthesis failed:', result.errorDetails);
+                            alert('Failed to synthesize speech: ' + result.errorDetails);
+                        }
+                        synthesizer.close();
+                        playButton.disabled = false;
+                        playButton.innerText = 'Display';
+                    },
+                    function (err) {
+                        console.error('Speech synthesis error:', err);
+                        alert('Error during speech synthesis: ' + err);
+                        synthesizer.close();
+                        playButton.disabled = false;
+                        playButton.innerText = 'Display';
+                    });
+            } catch (error) {
+                console.error('Error initializing Speech SDK:', error);
+                alert('Failed to initialize speech synthesis: ' + error);
+                playButton.disabled = false;
+                playButton.innerText = 'Display';
+            }
+        }
+
+        // Parse Flashcards from Input Text
+
 
         // Update Flashcard List
         function updateFlashcardList() {
@@ -433,13 +697,20 @@
         }
 
         // Show Flashcard Prompt
+        // Show Flashcard Prompt
         function showFlashcardPrompt() {
             const card = flashcards[currentReviewIndex];
             document.getElementById('flashcard-prompt').innerHTML = `<h3>${card.prompt}</h3>`;
+            
+            // Hide the answer and review buttons using the 'hidden' class
             document.getElementById('flashcard-answer').classList.add('hidden');
-            document.getElementById('review-buttons').style.display = 'block';
+            document.getElementById('review-buttons').classList.add('hidden');
+            
+            // Show the "Show Answers" button
+            document.getElementById('show-answers-button').classList.remove('hidden');
         }
 
+        // Handle Review Choice
         // Handle Review Choice
         function reviewChoice(choice) {
             const card = flashcards[currentReviewIndex];
@@ -457,7 +728,7 @@
                     if (card.rememberedCount >= 2) {
                         card.nextReviewDate = null; // No longer needs review
                     } else {
-                        card.nextReviewDate = addDays(new Date(), 7);
+                        card.nextReviewDate = addDays(new Date(), 14);
                     }
                 }
             } else {
@@ -466,7 +737,9 @@
             }
             card.reviewDates.push(new Date().toISOString().split('T')[0]);
             localStorage.setItem('flashcards', JSON.stringify(flashcards));
-            showFlashcardAnswer();
+
+            // Automatically move to the next flashcard
+            prepareReview();
         }
 
         // Format the Answer for Display
@@ -494,6 +767,7 @@
         }
 
         // Show Flashcard Answer
+        // Show Flashcard Answer
         function showFlashcardAnswer() {
             const card = flashcards[currentReviewIndex];
             let audioHTML = '';
@@ -520,7 +794,9 @@
                 <button onclick="nextFlashcard()">Next Flashcard</button>
             `;
             document.getElementById('flashcard-answer').classList.remove('hidden');
-            document.getElementById('review-buttons').style.display = 'none';
+            
+            // Hide the review buttons using the 'hidden' class instead of style.display
+            document.getElementById('review-buttons').classList.add('hidden');
         }
 
         // Edit Current Flashcard in Review Page
