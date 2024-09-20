@@ -6,189 +6,210 @@
     <!-- Viewport meta tag for mobile devices -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        /* CSS Styles */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            background-color: #f4f4f4;
+        :root {
+            --salmon: #F79F77;
+            --light-blue: #80BEF5;
+            --pale-yellow: #F6D58A;
+            --black: #010101;
+            --white: #FFFFFF;
+            --light-gray: #F5F5F5;
         }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            background-color: var(--white);
+            color: var(--black);
+            line-height: 1.5;
+        }
+
         nav {
-            background-color: #333;
-            padding: 10px;
+            background-color: var(--light-blue);
+            padding: 1rem;
             display: flex;
             flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem;
         }
+
         nav button {
-            margin-right: 10px;
-            margin-bottom: 10px;
-            padding: 10px 15px;
-            background-color: #555;
-            color: #fff;
+            padding: 0.75rem 1rem;
+            background-color: var(--salmon);
+            color: var(--white);
             border: none;
+            border-radius: 0.375rem;
             cursor: pointer;
-            flex: 1 1 calc(25% - 20px);
+            font-weight: 600;
+            transition: background-color 0.2s;
         }
+
         nav button:hover {
-            background-color: #777;
+            background-color: var(--pale-yellow);
+            color: var(--black);
         }
+
         #content {
-            padding: 20px;
-            max-width: 800px;
+            padding: 1.5rem;
+            max-width: 100%;
             margin: 0 auto;
         }
+
         h2 {
-            color: #333;
+            color: var(--light-blue);
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
         }
+
         #flashcard-list, #status-gallery {
-            margin-top: 20px;
+            margin-top: 1.5rem;
         }
+
         .flashcard-item {
-            background-color: #fff;
-            border-radius: 5px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background-color: var(--light-gray);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+
         .flashcard-item input[type="text"], .flashcard-item textarea {
             width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
-            border-radius: 3px;
-            border: 1px solid #ccc;
+            padding: 0.5rem;
+            margin-bottom: 0.75rem;
+            border-radius: 0.25rem;
+            border: 1px solid var(--light-blue);
+            background-color: var(--white);
+            color: var(--black);
         }
+
         #flashcard-answer {
-            margin-top: 20px;
+            margin-top: 1.5rem;
         }
+
         .hidden {
             display: none;
         }
+
         #review-buttons button, #edit-buttons button {
-            margin-right: 10px;
-            margin-bottom: 10px;
-            padding: 10px 15px;
-            background-color: #28a745;
-            color: #fff;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+            padding: 0.75rem 1rem;
+            background-color: var(--salmon);
+            color: var(--white);
             border: none;
             cursor: pointer;
-            border-radius: 3px;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            transition: background-color 0.2s;
         }
-        #review-buttons button:nth-child(2) {
-            background-color: #dc3545;
-        }
-        #review-buttons button:nth-child(3) {
-            background-color: #ffc107;
-            color: #000;
-        }
+
         #review-buttons button:hover, #edit-buttons button:hover {
-            opacity: 0.8;
+            background-color: var(--pale-yellow);
+            color: var(--black);
         }
+
         textarea {
             resize: vertical;
         }
+
         #flashcard-prompt h3 {
-            font-size: 24px;
-            color: #007bff;
+            font-size: 1.25rem;
+            color: var(--light-blue);
             word-wrap: break-word;
         }
+
         #flashcard-answer p {
-            font-size: 18px;
+            font-size: 1rem;
             line-height: 1.6;
             word-wrap: break-word;
         }
+
         #flashcard-answer ul {
             list-style-type: disc;
-            margin-left: 20px;
+            margin-left: 1.25rem;
         }
+
         #flashcard-answer strong {
-            color: #333;
+            color: var(--salmon);
         }
+
         audio, img {
             display: block;
-            margin-top: 15px;
+            margin-top: 1rem;
             max-width: 100%;
         }
+
         button {
-            border-radius: 3px;
+            border-radius: 0.375rem;
         }
+
         label {
             display: block;
-            margin-top: 10px;
-            font-weight: bold;
+            margin-top: 0.75rem;
+            font-weight: 600;
+            color: var(--light-blue);
         }
+
         input[type="file"] {
-            margin-bottom: 10px;
+            margin-bottom: 0.75rem;
         }
-        /* Style for the Clear Cache button */
+
         #import-export button {
-            margin-top: 10px;
-            background-color: #dc3545;
+            margin-top: 0.75rem;
+            background-color: var(--salmon);
+            color: var(--white);
         }
-        /* Responsive adjustments */
-        @media (max-width: 600px) {
-            nav button {
-                flex: 1 1 100%;
-            }
-            #flashcard-prompt h3 {
-                font-size: 20px;
-            }
-            #flashcard-answer p {
-                font-size: 16px;
-            }
-            #review-buttons button, #edit-buttons button {
-                padding: 8px 12px;
-                font-size: 14px;
-            }
-        }
-        /* Status page adjustments */
+
         .status-row {
             display: flex;
             flex-wrap: wrap;
-            margin-bottom: 20px;
-        }
-        .status-item {
-            background-color: #fff;
-            border-radius: 5px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            flex: 1 1 calc(50% - 10px);
-            margin-right: 10px;
-        }
-        .status-item:last-child {
-            margin-right: 0;
-        }
-        @media (max-width: 600px) {
-            .status-item {
-                flex: 1 1 100%;
-                margin-right: 0;
-            }
-        }
-        .hidden {
-            display: none;
-        }
-        #show-answers-button {
-            /* Inherits styles from nav buttons or add specific styles */
-            margin-top: 10px;
-            background-color: #007bff; /* Example color */
-        }
-        #play-prompt-button {
-            margin-top: 10px;
-            background-color: #17a2b8; /* Example color for differentiation */
-        }
-        @media (max-width: 768px) {
-            /* Tablet and below */
-            nav button {
-                flex: 1 1 48%;
-            }
-            /* Additional styles */
+            gap: 1rem;
+            margin-bottom: 1.5rem;
         }
 
-        @media (max-width: 480px) {
-            /* Mobile phones */
+        .status-item {
+            background-color: var(--light-gray);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            flex: 1 1 calc(50% - 0.5rem);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        #show-answers-button, #play-prompt-button {
+            margin-top: 0.75rem;
+            background-color: var(--light-blue);
+            color: var(--white);
+        }
+
+        @media (max-width: 640px) {
             nav button {
+                flex: 1 1 calc(50% - 0.25rem);
+            }
+
+            .status-item {
                 flex: 1 1 100%;
             }
-            /* Additional styles */
+
+            #content {
+                padding: 1rem;
+            }
+
+            h2 {
+                font-size: 1.25rem;
+            }
+
+            #flashcard-prompt h3 {
+                font-size: 1.125rem;
+            }
+
+            #flashcard-answer p {
+                font-size: 0.875rem;
+            }
+
+            #review-buttons button, #edit-buttons button {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.875rem;
+            }
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/microsoft-cognitiveservices-speech-sdk/distrib/browser/microsoft.cognitiveservices.speech.sdk.bundle.js"></script>
@@ -253,11 +274,11 @@
 </head>
 <body>
     <nav>
-        <button onclick="showPage('review-page')">Review Page</button>
-        <button onclick="showPage('input-page')">Input Page</button>
-        <button onclick="showPage('status-page')">Status Page</button>
+        <button onclick="showPage('review-page')">Review</button>
+        <button onclick="showPage('input-page')">Input</button>
+        <button onclick="showPage('status-page')">Status</button>
         <button onclick="showPage('import-export')">Import/Export</button>
-        <button onclick="showPage('settings-page')">Settings</button> <!-- New Settings Button -->
+        <button id="settings-button" onclick="showPage('settings-page')">Settings</button> <!-- Added ID --> -->
     </nav>
     <div id="content">
         <!-- Settings Page -->
@@ -276,7 +297,6 @@
         <!-- Review Page -->
         <!-- Review Page -->
         <div id="review-page">
-            <h2>Review Flashcards</h2>
             <p>Flashcards to review today: <span id="flashcards-to-review">0</span></p>
             <div id="flashcard-prompt">
                 <!-- Flashcard prompt -->
@@ -325,6 +345,7 @@
         </div>
 
         <!-- Import/Export -->
+        <!-- Add to Import/Export Page -->
         <div id="import-export" style="display: none;">
             <h2>Import/Export Data</h2>
             <button onclick="exportData()">Export Data</button>
@@ -333,6 +354,8 @@
             <button onclick="importData()">Import Data</button>
             <br><br>
             <button onclick="clearCache()">Clear Cache</button>
+            <br><br>
+            <button onclick="showPage('settings-page')">Change Settings</button> <!-- New Change Settings Button -->
         </div>
     </div>
     <script>
@@ -343,15 +366,34 @@
         let imageFiles = {};
         const groups = ['A', 'B']; // You can add more groups as needed
 
+        function updateSettingsButtonVisibility() {
+            const settingsButton = document.getElementById('settings-button');
+            const subscriptionKey = localStorage.getItem('azureSubscriptionKey');
+            const serviceRegion = localStorage.getItem('azureServiceRegion');
+
+            if (subscriptionKey && serviceRegion) {
+                // Hide the Settings button if settings are already saved
+                settingsButton.style.display = 'none';
+            } else {
+                // Show the Settings button if settings are not saved
+                settingsButton.style.display = 'block';
+            }
+        }
         // Reset Settings Function
         function resetSettings() {
             if (confirm('Are you sure you want to reset your Azure settings?')) {
                 localStorage.removeItem('azureSubscriptionKey');
                 localStorage.removeItem('azureServiceRegion');
                 alert('Azure settings have been reset.');
+                
+                // Update Settings button visibility
+                updateSettingsButtonVisibility();
+                
+                // Navigate to the Settings page to allow re-entry of credentials
                 showPage('settings-page');
             }
         }
+        // Save Settings Function
         // Save Settings Function
         function saveSettings() {
             const subscriptionKey = document.getElementById('subscription-key').value.trim();
@@ -368,10 +410,14 @@
 
             alert('Settings saved successfully.');
 
-            // Optionally, navigate back to the review page after saving
+            // Update Settings button visibility
+            updateSettingsButtonVisibility();
+
+            // Navigate back to the review page after saving
             showPage('review-page');
         }
 
+        // Load Settings on Page Load
         // Load Settings on Page Load
         function loadSettings() {
             const storedKey = localStorage.getItem('azureSubscriptionKey');
@@ -384,6 +430,9 @@
                 // If settings are not saved, navigate to the settings page
                 showPage('settings-page');
             }
+
+            // Update Settings button visibility
+            updateSettingsButtonVisibility();
         }
 
         // Initialize on Page Load
