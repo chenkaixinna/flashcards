@@ -110,6 +110,36 @@
             resize: vertical;
         }
 
+
+        #search-bar,
+        #flashcard-input,
+        #input-page button {
+            width: 100%;
+            max-width: 600px; /* Adjust this value as needed */
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--light-blue);
+            border-radius: 0.25rem;
+            box-sizing: border-box;
+        }
+
+
+        #flashcard-input {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        #input-page button {
+            background-color: var(--salmon);
+            color: var(--white);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        #input-page button:hover {
+            background-color: var(--pale-yellow);
+            color: var(--black);
+        }
         #flashcard-prompt h3 {
             font-size: 1.25rem;
             color: var(--light-blue);
@@ -191,6 +221,12 @@
                 flex: 1 1 100%;
             }
 
+            #search-bar,
+            #flashcard-input,
+            #input-page button {
+                max-width: 100%;
+            }
+            
             #content {
                 padding: 1rem;
             }
