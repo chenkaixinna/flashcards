@@ -672,10 +672,13 @@
             
             const searchQuery = document.getElementById('search-bar').value.toLowerCase();
 
-            // Filter flashcards based on search query
-            const filteredFlashcards = flashcards.filter(card => card.prompt.toLowerCase().includes(searchQuery));
+            // Map flashcards to include their indices in the main array
+            const filteredFlashcards = flashcards.map((card, index) => ({ card, index }))
+                .filter(item => item.card.prompt.toLowerCase().includes(searchQuery));
 
-            filteredFlashcards.forEach((card, index) => {
+            filteredFlashcards.forEach((item) => {
+                const index = item.index;
+                const card = item.card;
                 const cardDiv = document.createElement('div');
                 cardDiv.className = 'card-container';
                 cardDiv.id = `flashcard-${index}`;
@@ -723,24 +726,81 @@
         }
 
         // Enable Edit Mode for a Specific Flashcard
+        // Enable Edit Mode for a Specific Flashcard
+        // Enable Edit Mode for a Specific Flashcard
         function enableEdit(index) {
             const card = flashcards[index];
             const cardDiv = document.getElementById(`flashcard-${index}`);
+            cardDiv.innerHTML = ''; // Clear the cardDiv
             
-            cardDiv.innerHTML = `
-                <div class="flashcard-content">
-                    <label for="prompt-${index}">Prompt:</label>
-                    <input type="text" id="prompt-${index}" value="${card.prompt}" style="width: 100%; padding: 0.5rem; margin-bottom: 0.5rem; border: 1px solid var(--light-blue); border-radius: 0.25rem;">
-                    
-                    <label for="answer-${index}">Answer:</label>
-                    <textarea id="answer-${index}" rows="4" style="width: 100%; padding: 0.5rem; border: 1px solid var(--light-blue); border-radius: 0.25rem;">${card.answer}</textarea>
-                    
-                    <div class="card-footer">
-                        <button onclick="saveEdit(${index})">Save</button>
-                        <button onclick="cancelEdit(${index})">Cancel</button>
-                    </div>
-                </div>
+            const flashcardContentDiv = document.createElement('div');
+            flashcardContentDiv.className = 'flashcard-content';
+            
+            const promptLabel = document.createElement('label');
+            promptLabel.textContent = 'Prompt:';
+            flashcardContentDiv.appendChild(promptLabel);
+            
+            const promptInput = document.createElement('input');
+            promptInput.type = 'text';
+            promptInput.value = card.prompt;
+            promptInput.style.cssText = 'width: 100%; padding: 0.5rem; margin-bottom: 0.5rem; border: 1px solid var(--light-blue); border-radius: 0.25rem;';
+            flashcardContentDiv.appendChild(promptInput);
+            
+            const answerLabel = document.createElement('label');
+            answerLabel.textContent = 'Answer:';
+            flashcardContentDiv.appendChild(answerLabel);
+            
+            // Adjust the number of rows and style for the answer textarea
+            const answerTextarea = document.createElement('textarea');
+            answerTextarea.rows = 10; // Increase the number of rows from 4 to 10
+            answerTextarea.value = card.answer;
+            answerTextarea.style.cssText = `
+                width: 100%;
+                padding: 0.5rem;
+                border: 1px solid var(--light-blue);
+                border-radius: 0.25rem;
+                min-height: 200px; /* Set a minimum height */
+                resize: vertical;  /* Allow vertical resizing */
             `;
+            flashcardContentDiv.appendChild(answerTextarea);
+            
+            const cardFooterDiv = document.createElement('div');
+            cardFooterDiv.className = 'card-footer';
+            
+            const saveButton = document.createElement('button');
+            saveButton.textContent = 'Save';
+            saveButton.addEventListener('click', function() {
+                const updatedPrompt = promptInput.value.trim();
+                const updatedAnswer = answerTextarea.value.trim();
+
+                if (!updatedPrompt || !updatedAnswer) {
+                    alert('Prompt and Answer cannot be empty.');
+                    return;
+                }
+
+                // Update the flashcard data
+                flashcards[index].prompt = updatedPrompt;
+                flashcards[index].answer = updatedAnswer;
+                flashcards[index].inputDate = new Date().toISOString().split('T')[0]; // Update input date if needed
+
+                // Save to localStorage
+                localStorage.setItem('flashcards', JSON.stringify(flashcards));
+
+                // Refresh the flashcard list
+                updateFlashcardList();
+            });
+            
+            const cancelButton = document.createElement('button');
+            cancelButton.textContent = 'Cancel';
+            cancelButton.addEventListener('click', function() {
+                // Simply refresh the flashcard list to revert changes
+                updateFlashcardList();
+            });
+            
+            cardFooterDiv.appendChild(saveButton);
+            cardFooterDiv.appendChild(cancelButton);
+            flashcardContentDiv.appendChild(cardFooterDiv);
+            cardDiv.appendChild(flashcardContentDiv);
         }
 
         // Save Edited Flashcard
@@ -764,6 +824,7 @@
             // Refresh the flashcard list
             updateFlashcardList();
         }
+
 
         // Cancel Editing of Flashcard
         function cancelEdit(index) {
