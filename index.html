@@ -272,17 +272,15 @@
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/microsoft-cognitiveservices-speech-sdk/distrib/browser/microsoft.cognitiveservices.speech.sdk.bundle.js"></script>
+    <!-- Add XLSX library -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <script>
         // Azure Speech Service Configuration
-
         const serviceRegion = 'eastasia'; // Replace with your actual region
         const voiceName = 'en-US-JaneNeural'; // Replace with your desired voice
         
-        // Verify SpeechSDK is loaded
         console.log('SpeechSDK:', typeof SpeechSDK !== 'undefined' ? 'Loaded' : 'Not Loaded');
 
-        // Your existing JavaScript functions (e.g., playPromptAudio, showAnswers, etc.)
-        // Ensure they are defined here or in external scripts included after the SDK
         function parseFlashcards(text) {
             const lines = text.split('\n');
             const cards = [];
@@ -300,7 +298,6 @@
                         answer: '',
                         audio: '',
                         image: '',
-                        // Removed group assignment
                         reviewDates: [],
                         nextReviewDate: new Date().toISOString().split('T')[0],
                         rememberedCount: 0,
@@ -337,7 +334,7 @@
         <button onclick="showPage('input-page')">Input</button>
         <button onclick="showPage('status-page')">Status</button>
         <button onclick="showPage('import-export')">Import/Export</button>
-        <button id="settings-button" onclick="showPage('settings-page')">Settings</button> <!-- Added ID -->
+        <button id="settings-button" onclick="showPage('settings-page')">Settings</button>
     </nav>
     <div id="content">
         <!-- Settings Page -->
@@ -353,78 +350,62 @@
             <button onclick="saveSettings()">Save Settings</button>
             <button onclick="resetSettings()" style="background-color: #dc3545; margin-left: 10px;">Reset Settings</button> 
         </div>
+
+        <!-- Review Page -->
         <div id="review-page">
             <p>Flashcards to review today: <span id="flashcards-to-review">0</span></p>
             <div class="card-container">
                 <div class="flashcard-content">
-                    <div id="flashcard-prompt">
-                        <!-- Flashcard prompt -->
-                    </div>
-                        <!-- Show Answers Button -->
+                    <div id="flashcard-prompt"></div>
                     <button id="show-answers-button" onclick="showAnswers()">Show Answers</button>
-                    
-                    <!-- Display Prompt Audio Button -->
                     <button id="play-prompt-button" onclick="playPromptAudio()">Display</button> 
                     
-                    <!-- Review Buttons (Initially Hidden) -->
                     <div id="review-buttons" class="hidden">
                         <button onclick="reviewChoice('remember')">Remember</button>
                         <button onclick="reviewChoice('forget')">Forget</button>
                         <button onclick="reviewChoice('not_sure')">Not Sure</button>
                     </div>
                     
-                    <div id="flashcard-answer" class="hidden">
-                        <!-- Answer and media -->
-                    </div>
+                    <div id="flashcard-answer" class="hidden"></div>
                 </div>
             </div>
         </div>
-        <!-- Input Page -->
+
         <!-- Input Page -->
         <div id="input-page" style="display: none;">
             <h2>Input Flashcards</h2>
-            
-            <!-- Search Bar -->
             <input type="text" id="search-bar" placeholder="Search prompts..." oninput="updateFlashcardList()" style="width: 100%; padding: 0.5rem; margin-bottom: 1rem; border: 1px solid var(--light-blue); border-radius: 0.25rem;">
-            
             <textarea id="flashcard-input" rows="10" cols="80" placeholder="Enter flashcards here..."></textarea>
             <br><br>
             <button onclick="processFlashcards()">Submit Flashcards</button>
             <h3>Flashcards List</h3>
-            <div id="flashcard-list">
-                <!-- Flashcards for editing will be dynamically inserted here -->
-            </div>
+            <div id="flashcard-list"></div>
         </div>
 
         <!-- Status Page -->
         <div id="status-page" style="display: none;">
             <h2>Status</h2>
-            <div id="status-gallery">
-                <!-- Status gallery -->
-            </div>
+            <div id="status-gallery"></div>
         </div>
 
-        <!-- Import/Export -->
-        <!-- Add to Import/Export Page -->
+        <!-- Import/Export Page -->
         <div id="import-export" style="display: none;">
             <h2>Import/Export Data</h2>
-            <button onclick="exportData()">Export Data</button>
+            <button onclick="exportData()">Export Data (XLSX)</button>
             <br><br>
-            <input type="file" id="import-file">
-            <button onclick="importData()">Import Data</button>
+            <input type="file" id="import-file" accept=".xlsx">
+            <button onclick="importData()">Import Data (XLSX)</button>
             <br><br>
             <button onclick="clearCache()">Clear Cache</button>
             <br><br>
-            <button onclick="showPage('settings-page')">Change Settings</button> <!-- New Change Settings Button -->
+            <button onclick="showPage('settings-page')">Change Settings</button>
         </div>
     </div>
     <script>
-        // Data Structures
         let flashcards = [];
         let currentReviewIndex = -1;
         let audioFiles = {};
         let imageFiles = {};
-        // Removed groups array as it's no longer needed
 
         function updateSettingsButtonVisibility() {
             const settingsButton = document.getElementById('settings-button');
@@ -432,29 +413,23 @@
             const serviceRegion = localStorage.getItem('azureServiceRegion');
 
             if (subscriptionKey && serviceRegion) {
-                // Hide the Settings button if settings are already saved
                 settingsButton.style.display = 'none';
             } else {
-                // Show the Settings button if settings are not saved
                 settingsButton.style.display = 'block';
             }
         }
-        // Reset Settings Function
+
         function resetSettings() {
             if (confirm('Are you sure you want to reset your Azure settings?')) {
                 localStorage.removeItem('azureSubscriptionKey');
                 localStorage.removeItem('azureServiceRegion');
                 alert('Azure settings have been reset.');
                 
-                // Update Settings button visibility
                 updateSettingsButtonVisibility();
-                
-                // Navigate to the Settings page to allow re-entry of credentials
                 showPage('settings-page');
             }
         }
-        // Save Settings Function
-        // Save Settings Function
+
         function saveSettings() {
             const subscriptionKey = document.getElementById('subscription-key').value.trim();
             const serviceRegionInput = document.getElementById('service-region').value.trim();
@@ -464,48 +439,37 @@
                 return;
             }
     
-            // Save to localStorage
             localStorage.setItem('azureSubscriptionKey', subscriptionKey);
             localStorage.setItem('azureServiceRegion', serviceRegionInput);
     
             alert('Settings saved successfully.');
     
-            // Update Settings button visibility
             updateSettingsButtonVisibility();
-    
-            // Navigate back to the review page after saving
             showPage('review-page');
         }
     
-        // Load Settings on Page Load
         function loadSettings() {
             const storedKey = localStorage.getItem('azureSubscriptionKey');
             const storedRegion = localStorage.getItem('azureServiceRegion');
     
             if (storedKey && storedRegion) {
-                // If settings are already saved, do nothing or provide feedback
                 console.log('Azure settings loaded from localStorage.');
             } else {
-                // If settings are not saved, navigate to the settings page
                 showPage('settings-page');
             }
     
-            // Update Settings button visibility
             updateSettingsButtonVisibility();
         }
 
         function showPage(pageId) {
             const pages = ['input-page', 'review-page', 'status-page', 'import-export', 'settings-page'];
             
-            // Hide all pages
             pages.forEach(id => {
                 document.getElementById(id).style.display = 'none';
             });
 
-            // Show the selected page
             document.getElementById(pageId).style.display = 'block';
 
-            // Call relevant functions based on the page
             if (pageId === 'review-page') {
                 prepareReview();
             } else if (pageId === 'status-page') {
@@ -515,7 +479,6 @@
             }
         }
 
-        // Process Flashcards Input
         function processFlashcards() {
             const inputText = document.getElementById('flashcard-input').value;
             const cards = parseFlashcards(inputText);
@@ -531,8 +494,6 @@
             updateFlashcardList();
         }
 
-
-        // Show Answers Function with Server-Side TTS
         function showAnswers() {
             const card = flashcards[currentReviewIndex];
             
@@ -542,8 +503,6 @@
             }
 
             const formattedAnswer = formatAnswer(card.answer);
-
-            // Retrieve Azure settings from localStorage
             const subscriptionKey = localStorage.getItem('azureSubscriptionKey');
             const serviceRegion = localStorage.getItem('azureServiceRegion');
 
@@ -553,14 +512,10 @@
                 return;
             }
 
-            // Initialize Azure Speech Config
             const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(subscriptionKey, serviceRegion);
             speechConfig.speechSynthesisVoiceName = voiceName;
-
-            // Create a synthesizer
             const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, null);
 
-            // Synthesize speech asynchronously
             synthesizer.speakTextAsync(card.answer,
                 function (result) {
                     if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
@@ -575,19 +530,11 @@
                     synthesizer.close();
                 });
 
-            // Populate the flashcard-answer div with the formatted answer
-            document.getElementById('flashcard-answer').innerHTML = `
-                ${formattedAnswer}
-            `;
-
-            // Show the answer and review buttons
+            document.getElementById('flashcard-answer').innerHTML = `${formattedAnswer}`;
             document.getElementById('flashcard-answer').classList.remove('hidden');
             document.getElementById('review-buttons').classList.remove('hidden');
-
-            // Hide the "Show Answers" button
             document.getElementById('show-answers-button').classList.add('hidden');
         }
-
 
         function playPromptAudio() {
             const card = flashcards[currentReviewIndex];
@@ -599,8 +546,6 @@
             }
 
             const promptText = card.prompt;
-
-            // Retrieve Azure settings from localStorage
             const subscriptionKey = localStorage.getItem('azureSubscriptionKey');
             const serviceRegion = localStorage.getItem('azureServiceRegion');
 
@@ -610,22 +555,15 @@
                 return;
             }
 
-            // Disable the button to prevent multiple clicks
             playButton.disabled = true;
             playButton.innerText = 'Playing...';
 
             try {
-                // Initialize Azure Speech Config
                 const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(subscriptionKey, serviceRegion);
                 speechConfig.speechSynthesisVoiceName = voiceName;
-
-                // Create an audio configuration that outputs to the default speaker
                 const audioConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
-
-                // Create a synthesizer
                 const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, audioConfig);
 
-                // Synthesize speech and play audio
                 synthesizer.speakTextAsync(promptText,
                     function (result) {
                         if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
@@ -653,29 +591,20 @@
             }
         }
 
-        // Parse Flashcards from Input Text
-
-       
-       // Update Flashcard List with Search Functionality and Styled Cards
-        // Update Flashcard List with Formatted Answers on Input Page
         function updateFlashcardList() {
             const listDiv = document.getElementById('flashcard-list');
             listDiv.innerHTML = '';
             
             const searchQuery = document.getElementById('search-bar').value.toLowerCase();
-
-            // No groups, so no need to map by group
             const filteredFlashcards = flashcards.filter(card => card.prompt.toLowerCase().includes(searchQuery));
 
             filteredFlashcards.forEach((card, index) => {
                 const cardDiv = document.createElement('div');
                 cardDiv.className = 'card-container';
                 cardDiv.id = `flashcard-${index}`;
-                
-                // Format the answer using the existing formatAnswer function
+
                 const formattedAnswer = formatAnswer(card.answer);
 
-                // Retrieve and format audio and image if available
                 let audioHTML = '';
                 if (card.audio) {
                     const audioData = localStorage.getItem('audio_' + card.audio);
@@ -692,7 +621,6 @@
                     }
                 }
 
-                // Display Mode with Formatted Answer and Media
                 cardDiv.innerHTML = `
                     <div class="flashcard-content">
                         <div id="flashcard-prompt-${index}">
@@ -714,12 +642,11 @@
             });
         }
 
-        // Enable Edit Mode for a Specific Flashcard
         function enableEdit(index) {
             const card = flashcards[index];
             const cardDiv = document.getElementById(`flashcard-${index}`);
-            cardDiv.innerHTML = ''; // Clear the cardDiv
-            
+            cardDiv.innerHTML = '';
+
             const flashcardContentDiv = document.createElement('div');
             flashcardContentDiv.className = 'flashcard-content';
             
@@ -737,17 +664,16 @@
             answerLabel.textContent = 'Answer:';
             flashcardContentDiv.appendChild(answerLabel);
             
-            // Adjust the number of rows and style for the answer textarea
             const answerTextarea = document.createElement('textarea');
-            answerTextarea.rows = 10; // Increase the number of rows from 4 to 10
+            answerTextarea.rows = 10;
             answerTextarea.value = card.answer;
             answerTextarea.style.cssText = `
                 width: 100%;
                 padding: 0.5rem;
                 border: 1px solid var(--light-blue);
                 border-radius: 0.25rem;
-                min-height: 200px; /* Set a minimum height */
-                resize: vertical;  /* Allow vertical resizing */
+                min-height: 200px;
+                resize: vertical;
             `;
             flashcardContentDiv.appendChild(answerTextarea);
             
@@ -765,22 +691,17 @@
                     return;
                 }
 
-                // Update the flashcard data
                 flashcards[index].prompt = updatedPrompt;
                 flashcards[index].answer = updatedAnswer;
-                flashcards[index].inputDate = new Date().toISOString().split('T')[0]; // Update input date if needed
+                flashcards[index].inputDate = new Date().toISOString().split('T')[0];
 
-                // Save to localStorage
                 localStorage.setItem('flashcards', JSON.stringify(flashcards));
-
-                // Refresh the flashcard list
                 updateFlashcardList();
             });
             
             const cancelButton = document.createElement('button');
             cancelButton.textContent = 'Cancel';
             cancelButton.addEventListener('click', function() {
-                // Simply refresh the flashcard list to revert changes
                 updateFlashcardList();
             });
             
@@ -790,63 +711,22 @@
             cardDiv.appendChild(flashcardContentDiv);
         }
 
-        // Save Edited Flashcard
-        function saveEdit(index) {
-            const updatedPrompt = document.getElementById(`prompt-${index}`).value.trim();
-            const updatedAnswer = document.getElementById(`answer-${index}`).value.trim();
-
-            if (!updatedPrompt || !updatedAnswer) {
-                alert('Prompt and Answer cannot be empty.');
-                return;
-            }
-
-            // Update the flashcard data
-            flashcards[index].prompt = updatedPrompt;
-            flashcards[index].answer = updatedAnswer;
-            flashcards[index].inputDate = new Date().toISOString().split('T')[0]; // Update input date if needed
-
-            // Save to localStorage
-            localStorage.setItem('flashcards', JSON.stringify(flashcards));
-
-            // Refresh the flashcard list
-            updateFlashcardList();
-        }
-
-
-        // Cancel Editing of Flashcard
-        function cancelEdit(index) {
-            // Simply refresh the flashcard list to revert changes
-            updateFlashcardList();
-        }
-
-        // Edit Flashcard
-        function editFlashcard(index, field, value) {
-            flashcards[index][field] = value;
-            localStorage.setItem('flashcards', JSON.stringify(flashcards));
-        }
-
-        // Remove Flashcard
         function removeFlashcard(index) {
             flashcards.splice(index, 1);
             localStorage.setItem('flashcards', JSON.stringify(flashcards));
             updateFlashcardList();
         }
 
-        // Load Flashcards on Page Load
         window.onload = function() {
             const storedFlashcards = localStorage.getItem('flashcards');
             if (storedFlashcards) {
                 flashcards = JSON.parse(storedFlashcards);
             }
 
-            // Load settings
             loadSettings();
-
-            // Show the review page by default
             showPage('review-page');
         };
 
-        // Prepare for Review
         function prepareReview() {
             const today = new Date().toISOString().split('T')[0];
             const dueFlashcards = flashcards.filter(card => card.nextReviewDate && card.nextReviewDate <= today);
@@ -862,20 +742,14 @@
             }
         }
 
-        // Show Flashcard Prompt
         function showFlashcardPrompt() {
             const card = flashcards[currentReviewIndex];
             document.getElementById('flashcard-prompt').innerHTML = `<h3>${card.prompt}</h3>`;
-            
-            // Hide the answer and review buttons using the 'hidden' class
             document.getElementById('flashcard-answer').classList.add('hidden');
             document.getElementById('review-buttons').classList.add('hidden');
-            
-            // Show the "Show Answers" button
             document.getElementById('show-answers-button').classList.remove('hidden');
         }
 
-        // Handle Review Choice
         function reviewChoice(choice) {
             const card = flashcards[currentReviewIndex];
             const today = new Date().toISOString().split('T')[0];
@@ -884,31 +758,24 @@
                 card.rememberedCount += 1;
 
                 if (card.rememberedCount >= 2) {
-                    // Solid remember achieved
+                    // After second remember, the card is mastered
                     card.nextReviewDate = null;
                 } else {
-                    // First remember, set next review to 14 days later
                     card.nextReviewDate = addDays(today, 14);
                 }
             } else if (choice === 'not_sure') {
-                // Reset remembered count and set next review to 30 days later
                 card.rememberedCount = 0;
                 card.nextReviewDate = addDays(today, 30);
             } else if (choice === 'forget') {
-                // Reset remembered count and refresh review date to 14 days later
                 card.rememberedCount = 0;
                 card.nextReviewDate = addDays(today, 14);
             }
 
-            // Record the review choice with date
             card.reviewDates.push({ date: today, choice: choice });
             localStorage.setItem('flashcards', JSON.stringify(flashcards));
-
-            // Automatically move to the next flashcard
             prepareReview();
         }
 
-        // Format the Answer for Display
         function formatAnswer(answer) {
             let formattedAnswer = '';
             const lines = answer.split('\n');
@@ -932,7 +799,6 @@
             return formattedAnswer;
         }
 
-        // Show Flashcard Answer
         function showFlashcardAnswer() {
             const card = flashcards[currentReviewIndex];
             let audioHTML = '';
@@ -959,19 +825,15 @@
                 <button onclick="nextFlashcard()">Next Flashcard</button>
             `;
             document.getElementById('flashcard-answer').classList.remove('hidden');
-            
-            // Hide the review buttons using the 'hidden' class instead of style.display
             document.getElementById('review-buttons').classList.add('hidden');
         }
 
-        // Add Days to Date
         function addDays(dateInput, days) {
             const date = new Date(dateInput);
             date.setDate(date.getDate() + days);
             return date.toISOString().split('T')[0];
         }
         
-        // Edit Current Flashcard in Review Page
         function editCurrentFlashcard() {
             const card = flashcards[currentReviewIndex];
             document.getElementById('flashcard-answer').innerHTML = `
@@ -999,56 +861,50 @@
             showFlashcardAnswer();
         }
 
-        // Move to Next Flashcard
         function nextFlashcard() {
             prepareReview();
         }
 
-        // Update Status
         function updateStatus() {
             const statusDiv = document.getElementById('status-gallery');
             statusDiv.innerHTML = '';
 
-            // Calculate overall summary
-            const summary = { input: 0, waitForReview: 0, solidRemember: 0 };
+            const summary = { input: 0, pendingReview: 0, mastered: 0 };
 
             flashcards.forEach(card => {
                 summary.input += 1;
                 if (card.nextReviewDate === null) {
-                    summary.solidRemember += 1;
+                    summary.mastered += 1;
                 } else {
-                    summary.waitForReview += 1;
+                    summary.pendingReview += 1;
                 }
             });
 
-            // Display overall summary
             let summaryHTML = '<h3>Overall Summary</h3><div class="status-row">';
             summaryHTML += `
                 <div class="status-item">
                     <p><strong>Total Input:</strong> ${summary.input}</p>
-                    <p><strong>Wait for Review:</strong> ${summary.waitForReview}</p>
-                    <p><strong>Solid Remember:</strong> ${summary.solidRemember}</p>
+                    <p><strong>Pending Review:</strong> ${summary.pendingReview}</p>
+                    <p><strong>Mastered:</strong> ${summary.mastered}</p>
                 </div>
             `;
             summaryHTML += '</div>';
             statusDiv.innerHTML += summaryHTML;
 
-            // Group by date
             const dates = {};
             flashcards.forEach(card => {
                 const date = card.inputDate;
                 if (!dates[date]) {
-                    dates[date] = { input: 0, waitForReview: 0, solidRemember: 0 };
+                    dates[date] = { input: 0, pendingReview: 0, mastered: 0 };
                 }
                 dates[date].input += 1;
                 if (card.nextReviewDate === null) {
-                    dates[date].solidRemember += 1;
+                    dates[date].mastered += 1;
                 } else {
-                    dates[date].waitForReview += 1;
+                    dates[date].pendingReview += 1;
                 }
             });
 
-            // Display date-wise stats
             const sortedDates = Object.keys(dates).sort().reverse();
             sortedDates.forEach(date => {
                 let dateHTML = `<h3>${date}</h3><div class="status-row">`;
@@ -1057,8 +913,8 @@
                     <div class="status-item">
                         <p><strong>Date:</strong> ${date}</p>
                         <p><strong>Input:</strong> ${data.input}</p>
-                        <p><strong>Wait for Review:</strong> ${data.waitForReview}</p>
-                        <p><strong>Solid Remember:</strong> ${data.solidRemember}</p>
+                        <p><strong>Pending Review:</strong> ${data.pendingReview}</p>
+                        <p><strong>Mastered:</strong> ${data.mastered}</p>
                     </div>
                 `;
                 dateHTML += '</div>';
@@ -1066,19 +922,40 @@
             });
         }
 
-        // Export Data
+        // Export/Import XLSX
         function exportData() {
-            const dataStr = JSON.stringify(flashcards);
-            const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-            const exportFileDefaultName = 'flashcards_data.json';
+            const wsData = [];
+            wsData.push([
+                'prompt',
+                'answer',
+                'audio',
+                'image',
+                'reviewDates',
+                'nextReviewDate',
+                'rememberedCount',
+                'inputDate'
+            ]);
 
-            const linkElement = document.createElement('a');
-            linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', exportFileDefaultName);
-            linkElement.click();
+            flashcards.forEach(card => {
+                const reviewDatesStr = JSON.stringify(card.reviewDates || []);
+                wsData.push([
+                    card.prompt || '',
+                    card.answer || '',
+                    card.audio || '',
+                    card.image || '',
+                    reviewDatesStr,
+                    card.nextReviewDate || '',
+                    card.rememberedCount || 0,
+                    card.inputDate || ''
+                ]);
+            });
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            XLSX.utils.book_append_sheet(wb, ws, "Flashcards");
+            XLSX.writeFile(wb, 'flashcards_data.xlsx');
         }
 
-        // Import Data
         function importData() {
             const fileInput = document.getElementById('import-file');
             const file = fileInput.files[0];
@@ -1086,17 +963,72 @@
                 alert('Please select a file to import.');
                 return;
             }
+
             const reader = new FileReader();
             reader.onload = function(e) {
-                flashcards = JSON.parse(e.target.result);
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                
+                const sheetData = XLSX.utils.sheet_to_json(worksheet, {
+                    header: 1,
+                    blankrows: false
+                });
+
+                const header = sheetData[0] || [];
+                const rows = sheetData.slice(1);
+
+                const importedFlashcards = rows.map(row => {
+                    const cardObj = {};
+                    for (let i = 0; i < header.length; i++) {
+                        let fieldName = header[i];
+                        let cellValue = row[i];
+
+                        if (fieldName === 'reviewDates' && typeof cellValue === 'string') {
+                            try {
+                                cellValue = JSON.parse(cellValue);
+                            } catch (err) {
+                                cellValue = [];
+                            }
+                        }
+
+                        if (fieldName === 'rememberedCount' && typeof cellValue === 'string') {
+                            cellValue = parseInt(cellValue, 10) || 0;
+                        }
+
+                        cardObj[fieldName] = cellValue;
+                    }
+
+                    cardObj.reviewDates = cardObj.reviewDates || [];
+                    cardObj.nextReviewDate = cardObj.nextReviewDate || null;
+                    cardObj.rememberedCount = cardObj.rememberedCount || 0;
+                    cardObj.prompt = cardObj.prompt || '';
+                    cardObj.answer = cardObj.answer || '';
+                    cardObj.audio = cardObj.audio || '';
+                    cardObj.image = cardObj.image || '';
+                    cardObj.inputDate = cardObj.inputDate || new Date().toISOString().split('T')[0];
+
+                    return cardObj;
+                });
+
+                importedFlashcards.forEach(importedCard => {
+                    const existingIndex = flashcards.findIndex(fc => fc.prompt === importedCard.prompt);
+                    if (existingIndex === -1) {
+                        flashcards.push(importedCard);
+                    } else {
+                        flashcards[existingIndex] = importedCard;
+                    }
+                });
+
                 localStorage.setItem('flashcards', JSON.stringify(flashcards));
                 updateFlashcardList();
-                alert('Data imported successfully.');
+                alert('Data imported successfully from XLSX.');
             };
-            reader.readAsText(file);
+            reader.readAsArrayBuffer(file);
         }
 
-        // Clear Cache
         function clearCache() {
             if (confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
                 localStorage.clear();
@@ -1107,6 +1039,11 @@
                 alert('All data has been cleared.');
                 showPage('input-page');
             }
+        }
+
+        function editFlashcard(index, field, value) {
+            flashcards[index][field] = value;
+            localStorage.setItem('flashcards', JSON.stringify(flashcards));
         }
     </script>
 </body>
