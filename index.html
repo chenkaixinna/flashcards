@@ -206,7 +206,8 @@
       transform: translateY(-5px);
     }
 
-    #show-answers-button, #play-prompt-button {
+    /* Button for playing the prompt audio */
+    #play-prompt-button {
       margin-top: 1rem;
       background-color: var(--soft-teal);
       color: var(--white);
@@ -219,7 +220,27 @@
       transition: all 0.3s ease;
     }
 
-    #show-answers-button:hover, #play-prompt-button:hover {
+    #play-prompt-button:hover {
+      background-color: var(--salmon);
+      color: var(--white);
+      transform: translateY(-2px);
+    }
+
+    /* Button for showing the answer text */
+    #show-answers-button {
+      margin-top: 1rem;
+      background-color: var(--soft-teal);
+      color: var(--white);
+      margin-bottom: 1.0rem;
+      font-size: 0.875rem;
+      padding: 0.75rem 1.0rem;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    #show-answers-button:hover {
       background-color: var(--salmon);
       color: var(--white);
       transform: translateY(-2px);
@@ -521,33 +542,7 @@
       updateFlashcardList();
     }
 
-    // Modified showAnswers() using synthesizeSpeech()
-    function showAnswers() {
-      const card = flashcards[currentReviewIndex];
-
-      if (!card) {
-        alert('No flashcard available to show the answer.');
-        return;
-      }
-
-      const formattedAnswer = formatAnswer(card.answer);
-      synthesizeSpeech(card.answer,
-        function(result) {
-          console.log('Speech synthesis (Show Answers) succeeded.');
-        },
-        function(err) {
-          console.error('Failed to synthesize speech:', err);
-          alert('Failed to synthesize speech: ' + (err.errorDetails || err));
-        }
-      );
-
-      document.getElementById('flashcard-answer').innerHTML = `${formattedAnswer}`;
-      document.getElementById('flashcard-answer').classList.remove('hidden');
-      document.getElementById('review-buttons').classList.remove('hidden');
-      document.getElementById('show-answers-button').classList.add('hidden');
-    }
-
-    // Modified playPromptAudio() using synthesizeSpeech()
+    // Play the prompt audio only.
     function playPromptAudio() {
       const card = flashcards[currentReviewIndex];
       const playButton = document.getElementById('play-prompt-button');
@@ -581,6 +576,21 @@
           playButton.innerText = 'Display';
         }
       );
+    }
+
+    // Show the answer text without calling TTS for the answer.
+    function showAnswers() {
+      const card = flashcards[currentReviewIndex];
+      if (!card) {
+        alert('No flashcard available to show the answer.');
+        return;
+      }
+      const formattedAnswer = formatAnswer(card.answer);
+      document.getElementById('flashcard-answer').innerHTML = formattedAnswer;
+      document.getElementById('flashcard-answer').classList.remove('hidden');
+      document.getElementById('review-buttons').classList.remove('hidden');
+      // Hide the Show Answers button after use.
+      document.getElementById('show-answers-button').classList.add('hidden');
     }
 
     function updateFlashcardList() {
@@ -737,9 +747,11 @@
     function showFlashcardPrompt() {
       const card = flashcards[currentReviewIndex];
       document.getElementById('flashcard-prompt').innerHTML = `<h3>${card.prompt}</h3>`;
+      // Hide the answer text initially.
       document.getElementById('flashcard-answer').classList.add('hidden');
-      document.getElementById('review-buttons').classList.add('hidden');
+      // Make sure both buttons are visible.
       document.getElementById('show-answers-button').classList.remove('hidden');
+      document.getElementById('review-buttons').classList.add('hidden');
     }
 
     function reviewChoice(choice) {
@@ -789,41 +801,6 @@
       return formattedAnswer;
     }
 
-    function showFlashcardAnswer() {
-      const card = flashcards[currentReviewIndex];
-      let audioHTML = '';
-      if (card.audio) {
-        const audioData = localStorage.getItem('audio_' + card.audio);
-        if (audioData) {
-          audioHTML = `<audio controls src="${audioData}"></audio>`;
-        }
-      }
-      let imageHTML = '';
-      if (card.image) {
-        const imageData = localStorage.getItem('image_' + card.image);
-        if (imageData) {
-          imageHTML = `<img src="${imageData}" alt="Image">`;
-        }
-      }
-      const formattedAnswer = formatAnswer(card.answer);
-      document.getElementById('flashcard-answer').innerHTML = `
-        ${formattedAnswer}
-        ${audioHTML}
-        ${imageHTML}
-        <br>
-        <button onclick="editCurrentFlashcard()">Edit</button>
-        <button class="small-button" onclick="nextFlashcard()">Next Flashcard</button>
-      `;
-      document.getElementById('flashcard-answer').classList.remove('hidden');
-      document.getElementById('review-buttons').classList.add('hidden');
-    }
-
-    function addDays(dateInput, days) {
-      const date = new Date(dateInput);
-      date.setDate(date.getDate() + days);
-      return date.toISOString().split('T')[0];
-    }
-    
     function editCurrentFlashcard() {
       const card = flashcards[currentReviewIndex];
       document.getElementById('flashcard-answer').innerHTML = `
@@ -844,11 +821,11 @@
 
     function saveEdit() {
       localStorage.setItem('flashcards', JSON.stringify(flashcards));
-      showFlashcardAnswer();
+      showFlashcardPrompt();
     }
 
     function cancelEdit() {
-      showFlashcardAnswer();
+      showFlashcardPrompt();
     }
 
     function nextFlashcard() {
@@ -1104,7 +1081,9 @@
       <div class="card-container">
         <div class="flashcard-content">
           <div id="flashcard-prompt"></div>
+          <!-- Button to show the answer text (without TTS) -->
           <button id="show-answers-button" onclick="showAnswers()">Show Answers</button>
+          <!-- Button to play the prompt audio -->
           <button id="play-prompt-button" onclick="playPromptAudio()">Display</button>
           
           <div id="review-buttons" class="hidden">
@@ -1116,7 +1095,7 @@
           <div id="flashcard-answer" class="hidden"></div>
         </div>
       </div>
-      <!-- Timer Section moved to the end and restyled to be less prominent -->
+      <!-- Timer Section -->
       <div id="timer-container">
         <p id="timer-display">00:00:00</p>
         <div id="timer-buttons">
