@@ -323,6 +323,7 @@
       }
     }
   </style>
+  <!-- Microsoft Cognitive Services Speech SDK -->
   <script src="https://cdn.jsdelivr.net/npm/microsoft-cognitiveservices-speech-sdk/distrib/browser/microsoft.cognitiveservices.speech.sdk.bundle.js"></script>
   <!-- XLSX library -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
@@ -332,6 +333,55 @@
     const voiceName = 'en-US-JaneNeural'; // Replace with your desired voice
 
     console.log('SpeechSDK:', typeof SpeechSDK !== 'undefined' ? 'Loaded' : 'Not Loaded');
+
+    // ----------------- TTS Helper with Retry Logic -----------------
+    const MAX_TTS_RETRIES = 2;
+
+    function synthesizeSpeech(text, onSuccess, onError, retryCount = 0) {
+      const subscriptionKey = localStorage.getItem('azureSubscriptionKey');
+      const serviceRegionStored = localStorage.getItem('azureServiceRegion');
+      if (!subscriptionKey || !serviceRegionStored) {
+        alert('Azure settings are not configured. Please set them in the Settings page.');
+        showPage('settings-page');
+        return;
+      }
+      const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(subscriptionKey, serviceRegionStored);
+      speechConfig.speechSynthesisVoiceName = voiceName;
+      const audioConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
+      const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, audioConfig);
+      synthesizer.speakTextAsync(text,
+        function(result) {
+          if(result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+            console.log('Speech synthesis succeeded.');
+            onSuccess(result);
+          } else {
+            console.error('Speech synthesis failed:', result.errorDetails);
+            if(retryCount < MAX_TTS_RETRIES) {
+              console.log("Retrying speech synthesis, attempt " + (retryCount+1));
+              setTimeout(function() {
+                synthesizeSpeech(text, onSuccess, onError, retryCount+1);
+              }, 1000);
+            } else {
+              onError(result);
+            }
+          }
+          synthesizer.close();
+        },
+        function(err) {
+          console.error('Speech synthesis error:', err);
+          if(retryCount < MAX_TTS_RETRIES) {
+            console.log("Retrying speech synthesis due to error, attempt " + (retryCount+1));
+            setTimeout(function() {
+              synthesizeSpeech(text, onSuccess, onError, retryCount+1);
+            }, 1000);
+          } else {
+            onError(err);
+          }
+          synthesizer.close();
+        }
+      );
+    }
+    // ---------------------------------------------------------------
 
     function parseFlashcards(text) {
       const lines = text.split('\n');
@@ -387,9 +437,9 @@
     function updateSettingsButtonVisibility() {
       const settingsButton = document.getElementById('settings-button');
       const subscriptionKey = localStorage.getItem('azureSubscriptionKey');
-      const serviceRegion = localStorage.getItem('azureServiceRegion');
+      const serviceRegionStored = localStorage.getItem('azureServiceRegion');
 
-      if (subscriptionKey && serviceRegion) {
+      if (subscriptionKey && serviceRegionStored) {
         settingsButton.style.display = 'none';
       } else {
         settingsButton.style.display = 'block';
@@ -471,6 +521,7 @@
       updateFlashcardList();
     }
 
+    // Modified showAnswers() using synthesizeSpeech()
     function showAnswers() {
       const card = flashcards[currentReviewIndex];
 
@@ -480,32 +531,15 @@
       }
 
       const formattedAnswer = formatAnswer(card.answer);
-      const subscriptionKey = localStorage.getItem('azureSubscriptionKey');
-      const serviceRegion = localStorage.getItem('azureServiceRegion');
-
-      if (!subscriptionKey || !serviceRegion) {
-        alert('Azure settings are not configured. Please set them in the Settings page.');
-        showPage('settings-page');
-        return;
-      }
-
-      const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(subscriptionKey, serviceRegion);
-      speechConfig.speechSynthesisVoiceName = voiceName;
-      const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, null);
-
-      synthesizer.speakTextAsync(card.answer,
-        function (result) {
-          if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
-            console.log('Speech synthesis succeeded.');
-          } else {
-            console.error('Speech synthesis failed:', result.errorDetails);
-          }
-          synthesizer.close();
+      synthesizeSpeech(card.answer,
+        function(result) {
+          console.log('Speech synthesis (Show Answers) succeeded.');
         },
-        function (err) {
-          console.error('Speech synthesis error:', err);
-          synthesizer.close();
-        });
+        function(err) {
+          console.error('Failed to synthesize speech:', err);
+          alert('Failed to synthesize speech: ' + (err.errorDetails || err));
+        }
+      );
 
       document.getElementById('flashcard-answer').innerHTML = `${formattedAnswer}`;
       document.getElementById('flashcard-answer').classList.remove('hidden');
@@ -513,6 +547,7 @@
       document.getElementById('show-answers-button').classList.add('hidden');
     }
 
+    // Modified playPromptAudio() using synthesizeSpeech()
     function playPromptAudio() {
       const card = flashcards[currentReviewIndex];
       const playButton = document.getElementById('play-prompt-button');
@@ -524,9 +559,9 @@
 
       const promptText = card.prompt;
       const subscriptionKey = localStorage.getItem('azureSubscriptionKey');
-      const serviceRegion = localStorage.getItem('azureServiceRegion');
+      const serviceRegionStored = localStorage.getItem('azureServiceRegion');
 
-      if (!subscriptionKey || !serviceRegion) {
+      if (!subscriptionKey || !serviceRegionStored) {
         alert('Azure settings are not configured. Please set them in the Settings page.');
         showPage('settings-page');
         return;
@@ -535,37 +570,17 @@
       playButton.disabled = true;
       playButton.innerText = 'Playing...';
 
-      try {
-        const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(subscriptionKey, serviceRegion);
-        speechConfig.speechSynthesisVoiceName = voiceName;
-        const audioConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
-        const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, audioConfig);
-
-        synthesizer.speakTextAsync(promptText,
-          function (result) {
-            if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
-              console.log('Speech synthesis succeeded.');
-            } else {
-              console.error('Speech synthesis failed:', result.errorDetails);
-              alert('Failed to synthesize speech: ' + result.errorDetails);
-            }
-            synthesizer.close();
-            playButton.disabled = false;
-            playButton.innerText = 'Display';
-          },
-          function (err) {
-            console.error('Speech synthesis error:', err);
-            alert('Error during speech synthesis: ' + err);
-            synthesizer.close();
-            playButton.disabled = false;
-            playButton.innerText = 'Display';
-          });
-      } catch (error) {
-        console.error('Error initializing Speech SDK:', error);
-        alert('Failed to initialize speech synthesis: ' + error);
-        playButton.disabled = false;
-        playButton.innerText = 'Display';
-      }
+      synthesizeSpeech(promptText,
+        function(result) {
+          playButton.disabled = false;
+          playButton.innerText = 'Display';
+        },
+        function(err) {
+          alert('Failed to synthesize speech: ' + (err.errorDetails || err));
+          playButton.disabled = false;
+          playButton.innerText = 'Display';
+        }
+      );
     }
 
     function updateFlashcardList() {
@@ -733,7 +748,6 @@
 
       if (choice === 'remember') {
         card.rememberedCount += 1;
-
         if (card.rememberedCount >= 2) {
           card.nextReviewDate = null;
         } else {
@@ -809,7 +823,7 @@
       date.setDate(date.getDate() + days);
       return date.toISOString().split('T')[0];
     }
-
+    
     function editCurrentFlashcard() {
       const card = flashcards[currentReviewIndex];
       document.getElementById('flashcard-answer').innerHTML = `
