@@ -74,7 +74,7 @@
       padding: 2rem;
       margin-top: 2rem;
       transition: transform 0.3s ease;
-      position: relative; /* Needed for positioning the delete button */
+      position: relative; /* For the small delete button positioning */
     }
 
     .card-container:hover {
@@ -425,6 +425,13 @@
       );
     }
     // ---------------------------------------------------------------
+
+    // Helper function to add days to a date string (YYYY-MM-DD)
+    function addDays(dateInput, days) {
+      const date = new Date(dateInput);
+      date.setDate(date.getDate() + days);
+      return date.toISOString().split('T')[0];
+    }
 
     function parseFlashcards(text) {
       const lines = text.split('\n');
