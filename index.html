@@ -5,72 +5,114 @@
   <title>Flashcard App</title>
   <!-- Viewport meta tag for mobile devices -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --salmon: #F79F77;
-      --light-blue: #80BEF5;
-      --pale-yellow: #F6D58A;
-      --black: #010101;
+      --primary-text: #1a202c;
+      --secondary-text: #4a5568;
+      --accent-green: #38A169;
+      --accent-green-hover: #2F855A;
+      --subtle-bg: #EDF2F7;
+      --subtle-border: #E2E8F0;
+      --bg-light: #F7FAFC;
       --white: #FFFFFF;
-      --light-gray: #F5F5F5;
-      --soft-teal: #5FD4B1;
-      --lavender: #E6E6FA;
+      --border-color: rgba(255, 255, 255, 0.5);
+      --shadow-color: rgba(31, 38, 135, 0.1);
     }
 
     .hidden {
-      display: none;
+      display: none !important;
     }
 
     body {
-      font-family: 'Quicksand', sans-serif;
+      font-family: 'Inter', sans-serif;
       margin: 0;
-      background-color: var(--lavender);
-      color: var(--black);
+      background-color: var(--bg-light);
+      color: var(--primary-text);
       line-height: 1.6;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      filter: blur(100px);
+      z-index: -1;
+    }
+
+    body::before {
+      background: radial-gradient(circle, rgba(199, 218, 247, 0.5), transparent 70%);
+      top: -100px;
+      left: -100px;
+    }
+
+    body::after {
+      background: radial-gradient(circle, rgba(216, 191, 216, 0.4), transparent 70%);
+      bottom: -100px;
+      right: -100px;
     }
 
     nav {
-      background-color: var(--light-blue);
-      padding: 0.5rem;
+      background: transparent;
+      padding: 1rem;
       display: flex;
       justify-content: center;
       gap: 0.5rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
     nav button {
-      padding: 0.5rem 1rem;
-      background-color: var(--white);
-      color: var(--light-blue);
-      border: none;
+      padding: 0.6rem 1.2rem;
+      background-color: rgba(255, 255, 255, 0.7);
+      color: var(--secondary-text);
+      border: 1px solid var(--border-color);
       border-radius: 20px;
       cursor: pointer;
       font-weight: 600;
       transition: all 0.3s ease;
+      backdrop-filter: blur(5px);
     }
 
     nav button:hover {
+      background-color: var(--white);
+      color: var(--primary-text);
       transform: translateY(-2px);
     }
 
     #content {
       padding: 2rem;
       max-width: 800px;
-      margin: 0 auto;
+      margin: 1rem auto;
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(20px);
+      border-radius: 30px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 8px 32px 0 var(--shadow-color);
     }
 
     h2, h3 {
-      color: var(--light-blue);
-      font-size: 2rem;
+      color: var(--primary-text);
+      font-size: 1.75rem;
       margin-bottom: 1.5rem;
       text-align: center;
-      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+      font-weight: 700;
+    }
+    
+    h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
     }
 
     .card-container {
-      background-color: var(--white);
-      border-radius: 15px;
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      background-color: rgba(255, 255, 255, 0.8);
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 4px 16px 0 var(--shadow-color);
       padding: 2rem;
       margin-top: 2rem;
       transition: transform 0.3s ease;
@@ -81,92 +123,140 @@
     }
 
     .flashcard-content {
-      min-height: 300px;
+      min-height: 350px;
       display: flex;
       flex-direction: column;
       justify-content: center;
+      align-items: center;
     }
 
     #flashcard-prompt {
-      font-size: 2.5rem;
-      font-weight: bold;
-      margin-bottom: 2.5rem;
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 2rem;
       text-align: center;
-      color: var(--light-blue);
+      color: var(--primary-text);
     }
 
     #flashcard-answer {
       text-align: left;
-      font-size: 1.1rem;
-      line-height: 1.8;
-    }
-
-    .flashcard-item input[type="text"], .flashcard-item textarea {
-      width: 100%;
-      padding: 0.75rem;
-      margin-bottom: 1rem;
-      border-radius: 10px;
-      border: 2px solid var(--light-blue);
-      background-color: var(--white);
-      color: var(--black);
       font-size: 1rem;
-      transition: border-color 0.3s ease;
+      line-height: 1.7;
+      width: 100%;
+    }
+    
+    #flashcard-answer p, #flashcard-answer ul, #flashcard-answer li {
+        margin: 0.5rem 0;
     }
 
-    .flashcard-item input[type="text"]:focus, .flashcard-item textarea:focus {
-      border-color: var(--salmon);
-      outline: none;
+    #action-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      width: 100%;
+      margin-top: 1.5rem;
     }
 
-    #review-buttons, .card-footer {
+    #action-buttons button {
+      flex: 1;
+    }
+
+    #review-buttons {
       display: flex;
       justify-content: center;
-      gap: 0.5rem;
+      gap: 0.75rem;
+      width: 100%;
       margin-top: 1.5rem;
       flex-wrap: nowrap;
     }
 
-    #review-buttons button, .card-footer button {
-      flex: 1;
-      padding: 0.75rem 0.5rem;
-      background-color: var(--light-blue);
-      color: var(--white);
-      border: none;
+    .card-footer {
+      display: flex;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    button, .button {
+      padding: 0.75rem 1.5rem;
+      background-color: rgba(255, 255, 255, 0.6);
+      color: var(--primary-text);
+      border: 1px solid var(--border-color);
       cursor: pointer;
-      border-radius: 20px;
+      border-radius: 12px;
       font-weight: 600;
       transition: all 0.3s ease;
       font-size: 0.9rem;
+      backdrop-filter: blur(5px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    button:hover, .button:hover {
+      transform: translateY(-2px);
+      background-color: rgba(255, 255, 255, 0.8);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+    }
+    
+    #show-answers-button, #generate-button {
+        background-color: rgba(56, 161, 105, 0.7);
+        color: var(--white);
+    }
+    #show-answers-button:hover, #generate-button:hover {
+        background-color: rgba(56, 161, 105, 0.9);
+    }
+
+    #review-buttons .remember-btn {
+        background-color: rgba(56, 161, 105, 0.7);
+        color: var(--white);
+    }
+    #review-buttons .remember-btn:hover {
+        background-color: rgba(56, 161, 105, 0.9);
+    }
+
+    #review-buttons .forget-btn {
+        background-color: rgba(229, 62, 62, 0.7);
+        color: var(--white);
+    }
+    #review-buttons .forget-btn:hover {
+        background-color: rgba(229, 62, 62, 0.9);
+    }
+
+    #review-buttons .notsure-btn {
+        background-color: rgba(49, 130, 206, 0.7);
+        color: var(--white);
+    }
+    #review-buttons .notsure-btn:hover {
+        background-color: rgba(49, 130, 206, 0.9);
+    }
+
+    #review-buttons button {
+        font-size: 0.8rem;
+    }
+
+    #review-buttons button, .card-footer button {
+      flex: 1;
+      min-width: 100px;
       white-space: nowrap;
     }
 
-    #edit-buttons button {
-      padding: 0.75rem 1.5rem;
-      background-color: var(--light-blue);
-      color: var(--white);
-      border: none;
-      cursor: pointer;
-      border-radius: 20px;
-      font-weight: 600;
-      transition: all 0.3s ease;
-    }
-
-    #review-buttons button:hover, #edit-buttons button:hover, .card-footer button:hover {
-      background-color: var(--salmon);
-      transform: translateY(-2px);
-    }
-
     #search-bar,
-    #flashcard-input,
-    #input-page button {
+    #word-input {
       width: 100%;
-      max-width: 600px;
-      padding: 0.75rem;
+      padding: 0.75rem 1rem;
       margin-bottom: 1.5rem;
-      border: 2px solid var(--light-blue);
-      border-radius: 10px;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
       box-sizing: border-box;
       font-size: 1rem;
+      background-color: rgba(255, 255, 255, 0.8);
+    }
+    
+    #search-bar:focus,
+    #word-input:focus {
+        outline: none;
+        border-color: var(--accent-green);
+        box-shadow: 0 0 0 2px rgba(56, 161, 105, 0.2);
     }
 
     .generate-container {
@@ -178,17 +268,12 @@
     }
 
     #word-input {
-      width: 100%;
-      padding: 0.75rem;
-      border: 2px solid var(--light-blue);
-      border-radius: 10px;
-      font-size: 1rem;
-      box-sizing: border-box;
+      margin-bottom: 0;
     }
 
     #generate-button {
         width: 100%;
-        padding: 0.5rem 1rem;
+        padding: 0.75rem 1.5rem;
     }
 
     @media (min-width: 640px) {
@@ -205,163 +290,130 @@
       }
     }
 
-    #flashcard-input {
-      min-height: 150px;
-      resize: vertical;
-    }
-
-    #input-page button {
-      background-color: var(--light-blue);
-      color: var(--white);
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-      font-weight: 600;
-    }
-
-    #input-page button:hover {
-      background-color: var(--salmon);
-    }
-
-    .status-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-    }
-
-    .status-item {
-      background-color: var(--white);
-      border-radius: 15px;
-      padding: 1.5rem;
-      flex: 1 1 calc(50% - 0.75rem);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      transition: transform 0.3s ease;
-    }
-
-    .status-item:hover {
-      transform: translateY(-5px);
-    }
-
-    #show-answers-button, #play-prompt-button {
-      margin-top: 1rem;
-      background-color: var(--soft-teal);
-      color: var(--white);
-      margin-bottom: 1.0rem;
-      font-size: 0.875rem;
-      padding: 0.75rem 1.0rem;
-      border: none;
-      border-radius: 20px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    #show-answers-button:hover, #play-prompt-button:hover {
-      background-color: var(--salmon);
-      color: var(--white);
-      transform: translateY(-2px);
-    }
-
     #timer-container {
       text-align: center;
-      margin-top: 1rem;
-      margin-bottom: 1rem;
-      font-size: 0.9rem;
-      color: #666;
+      margin: 2rem auto 1rem auto;
+      width: 100%;
     }
 
     #timer-display {
       font-size: 1rem;
-      margin-bottom: 0.3rem;
-      font-weight: normal;
-      color: #666;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: var(--secondary-text);
     }
 
     #timer-buttons {
-      display: inline-flex;
+      display: flex;
       justify-content: center;
-      gap: 0.3rem;
+      gap: 0.5rem;
     }
 
     #timer-buttons button {
-      padding: 0.3rem 0.6rem;
-      background-color: #eee;
-      color: #333;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      cursor: pointer;
+      padding: 0.25rem 0.75rem;
+      background-color: var(--subtle-bg);
+      color: var(--secondary-text);
+      border: 1px solid var(--subtle-border);
+      border-radius: 8px;
+      font-weight: 500;
       font-size: 0.8rem;
-      transition: background-color 0.3s ease;
+      box-shadow: none;
     }
 
     #timer-buttons button:hover {
-      background-color: #ddd;
-    }
-
-    .small-button {
-      padding: 0.5rem 0.8rem;
-      font-size: 0.8rem;
-      background-color: var(--pale-yellow);
-      color: var(--black);
-      border: 1px solid var(--light-blue);
-      border-radius: 10px;
-      transition: all 0.3s ease;
-    }
-    .small-button:hover {
-      background-color: var(--salmon);
-      color: var(--white);
+      background-color: #E2E8F0;
+      transform: none;
+      box-shadow: none;
     }
 
     #gemini-output {
         white-space: pre-wrap;
-        background: #f0f0f0;
-        padding: 1em;
-        border-radius: 5px;
+        background: rgba(247, 250, 252, 0.8);
+        padding: 1.5em;
+        border-radius: 12px;
+        text-align: left;
+        font-size: 0.9rem;
+        line-height: 1.7;
+    }
+
+    .settings-section {
+      margin-bottom: 2rem;
+    }
+
+    .settings-section h3 {
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+      text-align: left;
+      color: var(--primary-text);
+    }
+
+    .settings-item {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 1rem;
+    }
+
+    .settings-item label {
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: var(--secondary-text);
+    }
+
+    .settings-item input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      box-sizing: border-box;
+      font-size: 1rem;
+      background-color: rgba(255, 255, 255, 0.8);
+    }
+
+    .settings-item input:focus {
+        outline: none;
+        border-color: var(--accent-green);
+        box-shadow: 0 0 0 2px rgba(56, 161, 105, 0.2);
+    }
+
+    #prompt-template {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      box-sizing: border-box;
+      font-size: 0.9rem;
+      background-color: rgba(255, 255, 255, 0.8);
+      resize: vertical;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .settings-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .danger-btn {
+        background-color: rgba(229, 62, 62, 0.7) !important;
+        color: var(--white) !important;
+    }
+
+    .danger-btn:hover {
+        background-color: rgba(229, 62, 62, 0.9) !important;
     }
 
     @media (max-width: 640px) {
-      nav button {
-        flex: 1 1 calc(50% - 0.25rem);
-      }
-
-      .status-item {
-        flex: 1 1 100%;
-      }
-
-      #search-bar,
-      #flashcard-input,
-      #word-input,
-      #input-page button {
-        max-width: 100%;
-      }
-      
       #content {
         padding: 1.5rem;
+        margin: 0.5rem;
       }
 
       h2 {
-        font-size: 1.75rem;
+        font-size: 1.5rem;
       }
 
       #flashcard-prompt {
         font-size: 1.75rem;
-      }
-
-      #flashcard-answer {
-        font-size: 1rem;
-      }
-
-      #review-buttons, .card-footer {
-        gap: 0.25rem;
-      }
-
-      #review-buttons button, .card-footer button {
-        padding: 0.6rem 0.3rem;
-        font-size: 0.8rem;
-      }
-
-      #edit-buttons button {
-        padding: 0.6rem 1.2rem;
-        font-size: 0.9rem;
       }
     }
   </style>
@@ -489,46 +541,31 @@
     let audioFiles = {};
     let imageFiles = {};
 
-    function updateSettingsButtonVisibility() {
-      const settingsButton = document.getElementById('settings-button');
-      const subscriptionKey = localStorage.getItem('azureSubscriptionKey');
-      const serviceRegionStored = localStorage.getItem('azureServiceRegion');
-      const geminiKey = localStorage.getItem('geminiApiKey');
-
-      if (subscriptionKey && serviceRegionStored && geminiKey) {
-        settingsButton.style.display = 'none';
-      } else {
-        settingsButton.style.display = 'block';
-      }
-    }
-
     function resetSettings() {
       if (confirm('Are you sure you want to reset your Azure and Gemini settings?')) {
         localStorage.removeItem('azureSubscriptionKey');
         localStorage.removeItem('azureServiceRegion');
         localStorage.removeItem('geminiApiKey');
         alert('All settings have been reset.');
-        updateSettingsButtonVisibility();
         showPage('settings-page');
       }
     }
 
     function saveSettings() {
       const subscriptionKey = document.getElementById('subscription-key').value.trim();
-      const serviceRegionInput = document.getElementById('service-region').value.trim();
       const geminiApiKey = document.getElementById('gemini-api-key').value.trim();
+      const serviceRegion = 'eastasia'; // Hardcoded as requested
 
-      if (!subscriptionKey || !serviceRegionInput || !geminiApiKey) {
-        alert('Please enter all API keys and region.');
+      if (!subscriptionKey || !geminiApiKey) {
+        alert('Please enter all API keys.');
         return;
       }
 
       localStorage.setItem('azureSubscriptionKey', subscriptionKey);
-      localStorage.setItem('azureServiceRegion', serviceRegionInput);
+      localStorage.setItem('azureServiceRegion', serviceRegion);
       localStorage.setItem('geminiApiKey', geminiApiKey);
 
       alert('Settings saved successfully.');
-      updateSettingsButtonVisibility();
       showPage('review-page');
     }
 
@@ -538,7 +575,6 @@
       const storedGeminiKey = localStorage.getItem('geminiApiKey');
 
       document.getElementById('subscription-key').value = storedKey || '';
-      document.getElementById('service-region').value = storedRegion || '';
       document.getElementById('gemini-api-key').value = storedGeminiKey || '';
 
       if (storedKey && storedRegion && storedGeminiKey) {
@@ -547,11 +583,76 @@
         showPage('settings-page');
       }
 
-      updateSettingsButtonVisibility();
+    }
+
+    const defaultPromptTemplate = `Generate a flashcard for the term "\${word}".
+
+Follow this format exactly. **Crucially, do not add any leading spaces or indentation to any line.** Each line must start with a character, not a space.
+- **Term**
+- Phonetic Symbols and Part of Speech (only for single word; express them directly without prelude)
+- To express the definition directly without prelude.
+- **Usage**: "..." (e.g., "Commonly used", "Slightly dated, more common in the 90s", "Formal")
+- **E1**: "..."
+- **E2**: "..."
+- **E3**: "..."
+- **Synonyms**: "..."
+- **Root**:"..."
+•Prefix: “...” 
+•Suffix: “...”
+- **Mnemonic:**: "..."
+
+If the term is a phrase, omit the "Phonetic Symbols and Part of Speech" and "Root" sections.
+
+Here are two examples of perfect output with no leading spaces:
+
+<example 1>
+- **prominent**
+- /ˈprɒmɪnənt/ (adjective)
+- To stand out or be easily noticeable.
+- **Usage**: "Commonly used in both formal and informal contexts."
+- **E1**: "The prominent building could be seen from miles away."
+- **E2**: "Her prominent role in the company made her a well-known figure."
+- **E3**: "He has a prominent scar on his left cheek."
+- **Synonyms**: "noticeable, conspicuous"
+- **Root**:  “prominent” comes from the Latin “prominere,” which means “to jut out.”
+- Prefix: “Pro-” (forward, in favor of)
+- Root: “Minere” (to project or to threaten)
+- **Mnemonic**: "Picture a PRO popping his head out of a tiny MINI TENT that sticks forward from a crowd. Because that little tent juts out, everyone spots him right away. PRO + MINI TENT = prominent → stands out."
+</example 1>
+
+<example 2>
+- **leave my mark**
+- To make a lasting impression or impact.
+- **Usage**: "A common and current idiom."
+- **E1**: "She wanted to leave her mark on the world through her art."
+- **E2**: "He left his mark in the industry with innovative designs."
+- **E3**: "Volunteering at the shelter allowed her to leave her mark on the community."
+- **Synonyms**: "make an impact, influence"
+- **Mnemonic**: "Imagine dipping your hand in bright paint and slapping it on a blank wall. The vivid hand-print dries and stays long after you walk away—just like any lasting impact you make."
+</example 2>
+
+Now, generate the flashcard for "\${word}":`;
+
+    function loadPrompt() {
+        const savedPrompt = localStorage.getItem('promptTemplate');
+        document.getElementById('prompt-template').value = savedPrompt || defaultPromptTemplate;
+    }
+
+    function savePrompt() {
+        const newPrompt = document.getElementById('prompt-template').value;
+        localStorage.setItem('promptTemplate', newPrompt);
+        alert('Prompt saved successfully!');
+    }
+
+    function resetPrompt() {
+        if (confirm('Are you sure you want to reset the prompt to its default?')) {
+            document.getElementById('prompt-template').value = defaultPromptTemplate;
+            savePrompt();
+        }
     }
 
     function showPage(pageId) {
-      const pages = ['input-page', 'review-page', 'status-page', 'import-export', 'settings-page'];
+      const pages = ['input-page', 'review-page', 'status-page', 'settings-page'];
 
       pages.forEach(id => {
         document.getElementById(id).style.display = 'none';
@@ -566,6 +667,8 @@
         updateStatus();
       } else if (pageId === 'input-page') {
         updateFlashcardList();
+      } else if (pageId === 'settings-page') {
+        loadPrompt();
       }
     }
 
@@ -589,50 +692,8 @@
         generateButton.disabled = true;
         generateButton.textContent = 'Generating...';
 
-        const prompt = `Generate a flashcard for the term "${word}".
-
-Follow this format exactly. **Crucially, do not add any leading spaces or indentation to any line.** Each line must start with a character, not a space.
-- **Term**
-- Phonetic Symbols and Part of Speech (only for single word; express them directly without prelude)
-- To express the definition directly without prelude.
-- **E1**: "..."
-- **E2**: "..."
-- **E3**: "..."
-- **Synonyms**: "..."
-- **Root**:"..."
-•Prefix: “...” 
-•Suffix: “...”
-- **Mnemonic:**: "..."
-
-If the term is a phrase, omit the "Phonetic Symbols and Part of Speech" and "Root" sections.
-
-Here are two examples of perfect output with no leading spaces:
-
-<example 1>
-- **prominent**
-- /ˈprɒmɪnənt/ (adjective)
-- To stand out or be easily noticeable.
-- **E1**: "The prominent building could be seen from miles away."
-- **E2**: "Her prominent role in the company made her a well-known figure."
-- **E3**: "He has a prominent scar on his left cheek."
-- **Synonyms**: "noticeable, conspicuous"
-- **Root**:  “prominent” comes from the Latin “prominere,” which means “to jut out.”
-- Prefix: “Pro-” (forward, in favor of)
-- Root: “Minere” (to project or to threaten)
-- **Mnemonic**: "Picture a PRO popping his head out of a tiny MINI TENT that sticks forward from a crowd. Because that little tent juts out, everyone spots him right away. PRO + MINI TENT = prominent → stands out."
-</example 1>
-
-<example 2>
-- **leave my mark**
-- To make a lasting impression or impact.
-- **E1**: "She wanted to leave her mark on the world through her art."
-- **E2**: "He left his mark in the industry with innovative designs."
-- **E3**: "Volunteering at the shelter allowed her to leave her mark on the community."
-- **Synonyms**: "make an impact, influence"
-- **Mnemonic**: "Imagine dipping your hand in bright paint and slapping it on a blank wall. The vivid hand-print dries and stays long after you walk away—just like any lasting impact you make."
-</example 2>
-
-Now, generate the flashcard for "${word}":`;
+        const promptTemplate = localStorage.getItem('promptTemplate') || defaultPromptTemplate;
+        const prompt = promptTemplate.replace(/\${word}/g, word);
 
         try {
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`, {
@@ -705,7 +766,6 @@ Now, generate the flashcard for "${word}":`;
     }
 
 
-    // Modified showAnswers() using synthesizeSpeech()
     function showAnswers() {
       const card = flashcards[currentReviewIndex];
 
@@ -716,13 +776,13 @@ Now, generate the flashcard for "${word}":`;
 
       const formattedAnswer = formatAnswer(card.answer);
       
+      // Show the answer and the review buttons, but hide the "Show Answer" button.
       document.getElementById('flashcard-answer').innerHTML = `${formattedAnswer}`;
       document.getElementById('flashcard-answer').classList.remove('hidden');
       document.getElementById('review-buttons').classList.remove('hidden');
-      document.getElementById('show-answers-button').classList.add('hidden');
+      document.getElementById('action-buttons').classList.add('hidden');
     }
 
-    // Modified playPromptAudio() using synthesizeSpeech()
     function playPromptAudio() {
       const card = flashcards[currentReviewIndex];
       const playButton = document.getElementById('play-prompt-button');
@@ -891,6 +951,7 @@ Now, generate the flashcard for "${word}":`;
       }
 
       loadSettings();
+      loadPrompt();
       showPage('review-page');
     };
 
@@ -914,6 +975,7 @@ Now, generate the flashcard for "${word}":`;
       document.getElementById('flashcard-prompt').innerHTML = `<h3>${card.prompt}</h3>`;
       document.getElementById('flashcard-answer').classList.add('hidden');
       document.getElementById('review-buttons').classList.add('hidden');
+      document.getElementById('action-buttons').classList.remove('hidden');
       document.getElementById('show-answers-button').classList.remove('hidden');
     }
 
@@ -921,7 +983,7 @@ Now, generate the flashcard for "${word}":`;
       const card = flashcards[currentReviewIndex];
       const today = new Date().toISOString().split('T')[0];
 
-      if (choice === 'remember') {
+      if (choice === 'know') {
         card.rememberedCount += 1;
         if (card.rememberedCount >= 2) {
           card.nextReviewDate = null;
@@ -1110,7 +1172,7 @@ Now, generate the flashcard for "${word}":`;
       const fileInput = document.getElementById('import-file');
       const file = fileInput.files[0];
       if (!file) {
-        alert('Please select a file to import.');
+        // This can happen if the user cancels the file dialog
         return;
       }
 
@@ -1240,25 +1302,54 @@ Now, generate the flashcard for "${word}":`;
     <button onclick="showPage('review-page')">Review</button>
     <button onclick="showPage('input-page')">Input</button>
     <button onclick="showPage('status-page')">Status</button>
-    <button onclick="showPage('import-export')">Import/Export</button>
     <button id="settings-button" onclick="showPage('settings-page')">Settings</button>
   </nav>
   <div id="content">
     <!-- Settings Page -->
     <div id="settings-page" style="display: none;">
       <h2>Settings</h2>
-      <label for="subscription-key">Azure Subscription Key:</label>
-      <input type="text" id="subscription-key" placeholder="Enter your Azure subscription key" />
-      
-      <label for="service-region">Service Region:</label>
-      <input type="text" id="service-region" placeholder="Enter your service region (e.g., eastasia)" />
 
-      <label for="gemini-api-key">Gemini API Key:</label>
-      <input type="text" id="gemini-api-key" placeholder="Enter your Gemini API key" />
-      
-      <br><br>
-      <button onclick="saveSettings()">Save Settings</button>
-      <button onclick="resetSettings()" style="background-color: #dc3545; margin-left: 10px;">Reset Settings</button> 
+      <div class="settings-section">
+        <h3>API Keys</h3>
+        <div class="settings-item">
+          <label for="subscription-key">Azure Subscription Key:</label>
+          <input type="text" id="subscription-key" placeholder="Enter your Azure subscription key" />
+        </div>
+        <div class="settings-item">
+          <label for="gemini-api-key">Gemini API Key:</label>
+          <input type="text" id="gemini-api-key" placeholder="Enter your Gemini API key" />
+        </div>
+        <div class="settings-actions">
+            <button onclick="saveSettings()">Save Settings</button>
+            <button onclick="resetSettings()" class="danger-btn">Reset Settings</button>
+        </div>
+      </div>
+
+      <hr style="margin: 2rem 0;">
+
+      <div class="settings-section">
+        <h3>Data Management</h3>
+        <div class="settings-actions">
+            <button onclick="exportData()">Export Data</button>
+            <button onclick="document.getElementById('import-file').click()">Import Data</button>
+            <input type="file" id="import-file" accept=".xlsx" style="display: none;" onchange="importData()">
+            <button onclick="clearCache()" class="danger-btn">Clear Cache</button>
+        </div>
+      </div>
+
+      <hr style="margin: 2rem 0;">
+
+      <div class="settings-section">
+        <h3>Generator Prompt</h3>
+        <div class="settings-item">
+            <label for="prompt-template">Edit the template used to generate flashcards. Use `${word}` as a placeholder for the term.</label>
+            <textarea id="prompt-template" rows="20"></textarea>
+        </div>
+        <div class="settings-actions">
+            <button onclick="savePrompt()">Save Prompt</button>
+            <button onclick="resetPrompt()">Reset to Default</button>
+        </div>
+      </div>
     </div>
 
     <!-- Review Page -->
@@ -1267,13 +1358,15 @@ Now, generate the flashcard for "${word}":`;
       <div class="card-container">
         <div class="flashcard-content">
           <div id="flashcard-prompt"></div>
-          <button id="show-answers-button" onclick="showAnswers()">Show Answers</button>
-          <button id="play-prompt-button" onclick="playPromptAudio()">Display</button>
+          <div id="action-buttons">
+            <button id="show-answers-button" onclick="showAnswers()">Show Answers</button>
+            <button id="play-prompt-button" onclick="playPromptAudio()">Display</button>
+          </div>
           
           <div id="review-buttons" class="hidden">
-            <button onclick="reviewChoice('remember')">Remember</button>
-            <button onclick="reviewChoice('forget')">Forget</button>
-            <button onclick="reviewChoice('not_sure')">Not Sure</button>
+            <button class="remember-btn" onclick="reviewChoice('know')">Know</button>
+            <button class="forget-btn" onclick="reviewChoice('forget')">Forget</button>
+            <button class="notsure-btn" onclick="reviewChoice('not_sure')">Not Sure</button>
           </div>
           
           <div id="flashcard-answer" class="hidden"></div>
@@ -1318,17 +1411,6 @@ Now, generate the flashcard for "${word}":`;
     </div>
 
     <!-- Import/Export Page -->
-    <div id="import-export" style="display: none;">
-      <h2>Import/Export Data</h2>
-      <button onclick="exportData()">Export Data (XLSX)</button>
-      <br><br>
-      <input type="file" id="import-file" accept=".xlsx">
-      <button onclick="importData()">Import Data (XLSX)</button>
-      <br><br>
-      <button onclick="clearCache()">Clear Cache</button>
-      <br><br>
-      <button onclick="showPage('settings-page')">Change Settings</button>
-    </div>
   </div>
 </body>
 </html>
