@@ -726,7 +726,7 @@ Now, generate the flashcard for "\${word}":`;
 
         document.getElementById('gemini-output-container').classList.add('hidden');
 
-        const geminiApiKey = localStorage.getItem('geminiApiKey');
+        const geminiApiKey = localStorage.getItem('geminiApiKey')?.trim();
         if (!geminiApiKey) {
             alert('Gemini API key is not set. Please configure it in the Settings page.');
             showPage('settings-page');
@@ -752,7 +752,9 @@ Now, generate the flashcard for "\${word}":`;
             });
 
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const errorData = await response.json();
+                console.error('Gemini API error details:', errorData);
+                throw new Error(`HTTP error! status: ${response.status}, message: ${JSON.stringify(errorData)}`);
             }
 
             const data = await response.json();
@@ -1044,7 +1046,7 @@ Now, generate the flashcard for "\${word}":`;
     }
 
     async function checkSentences() {
-        const geminiApiKey = localStorage.getItem('geminiApiKey');
+        const geminiApiKey = localStorage.getItem('geminiApiKey')?.trim();
         if (!geminiApiKey) {
             alert('Gemini API key is not set. Please go to Settings.');
             showPage('settings-page');
@@ -1083,7 +1085,11 @@ Example response format:
                 body: JSON.stringify({ contents: [{ parts: [{ text: validationPrompt }] }] })
             });
 
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('Gemini API error details:', errorData);
+                throw new Error(`HTTP error! status: ${response.status}, message: ${JSON.stringify(errorData)}`);
+            }
 
             const data = await response.json();
             const responseText = data.candidates[0].content.parts[0].text;
@@ -1159,11 +1165,15 @@ Example response format:
     }
 
     function formatAnswer(answer) {
+      // Remove markdown references to missing audio/image files in assets folder
+      let cleanedAnswer = answer.replace(/!\[Audio\]\(\.\/assets\/[^)]+\)/g, '');
+      cleanedAnswer = cleanedAnswer.replace(/!\[Image\]\(\.\/assets\/[^)]+\)/g, '');
+      
       if (window.marked) {
-        return marked.parse(answer, { gfm: true, breaks: true });
+        return marked.parse(cleanedAnswer, { gfm: true, breaks: true });
       }
       // Fallback if marked.js fails to load
-      return answer.replace(/\n/g, '<br>');
+      return cleanedAnswer.replace(/\n/g, '<br>');
     }
 
     function showFlashcardAnswer() {
