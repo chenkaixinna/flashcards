@@ -1553,7 +1553,7 @@ Example response format:
     <div id="input-page" style="display: none;">
       <h2>Generate Flashcard</h2>
       <div class="generate-container">
-        <input type="text" id="word-input" placeholder="Enter a word or phrase...">
+        <input type="text" id="word-input" placeholder="Enter a word or phrase..." onkeypress="if(event.key === 'Enter') generateFlashcard()">
         <button id="generate-button" onclick="generateFlashcard()">Generate</button>
       </div>
 
